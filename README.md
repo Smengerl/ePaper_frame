@@ -34,26 +34,21 @@ TBD
 
 ![body_assembly](./rendering/assembly.avi)
 
-| Filename       | Thumbnail                                                               | Required |
-| -------------- | ----------------------------------------------------------------------- | -------- |
-| body_top       | <img src="./images/body_top.jpg" alt="body_top" width="300"/>           | 1        |
-| body_base      | <img src="./images/body_base.jpg" alt="body_base" width="300"/>         | 1        |
-| body_side      | <img src="./images/body_side.jpg" alt="body_side" width="300"/>         | 2        |
-| body_front_back| <img src="./images/body_front_back.jpg" alt="body_front_back" width="300"/>| 2        |
-| body_battery   | <img src="./images/body_battery.jpg" alt="body_battery" width="300"/>     | 1        |
-| body_servo_side1 | <img src="./images/body_servo_side1.jpg" alt="body_servo_side1" width="300"/> | 6        |
-| body_servo_side2 | <img src="./images/body_servo_side2.jpg" alt="body_servo_side2" width="300"/> | 6        |
-| body_servo_top   | <img src="./images/body_servo_top.jpg" alt="body_servo_top" width="300"/>     | 6        |
+| Filename       | Thumbnail                                                                                   | Required |
+| -------------- | ------------------------------------------------------------------------------------------- | -------- |
+| frame             | <img src="./print/rendering/frame.png" alt="frame" width="300"/>                         | 1        |
+| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate" width="300"/> | 1        |
+| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box" width="300"/>                     | 1        |
+| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box" width="300"/> | 1        |
+| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid" width="300"/>               | optional, required for wall hanging in portrait mode |
+| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid" width="300"/>                 | option, required for wall hanging in landscape mode |
 
 #### Required screws
 
 | Name      | Spec    | Required |
 | --------- | ------- | -------- |
-| Screw     | M2 6mm  | 36       |
-| Screw     | M2 10mm | 198      |
-| Nuts      | M2      | 234      |
-| Pin (304) | M4 6mm  | 18       |
-| Bearing   | MR74-2RS (4mm ID, 7mm OD, 2.5mm Bore) | 18 |
+| Screw     | M2 6mm  | 4        |
+| Screw     | M2 10mm | 14       |
 
 ## ESP home yaml
 
