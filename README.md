@@ -2,10 +2,11 @@
 
 A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assistant 
 
-![front](./rendering/front.png)
+![front](./print/rendering/front.png)
 
-![back](./rendering/back.png)
-![back2](./rendering/back_2.png)
+![back](./print/rendering/back.png)
+
+![back2](./print/rendering/back_2.png)
 
 ## Introduction
 
