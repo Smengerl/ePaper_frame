@@ -1,10 +1,11 @@
-# <img src="./redering/hexapod-logo.svg" alt="logo" width="64"/> Hexapod
+# ePaper frame for ESPhome
 
-A 3D Printed picture frame
+A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assistant 
 
-![hexapod_model](./images/hexapod_model.jpg)
+![front](./rendering/front.png)
 
-![booting_up](./images/booting_up.gif)
+![back](./rendering/back.png)
+![back2](./rendering/back_2.png)
 
 ## Introduction
 
@@ -23,16 +24,13 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 
 ### Connection Diagram
 
-TBD
-![diagram](./images/diagram.svg)
+See waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
 
 ## Assembly
 
-![whole_assembly](./images/assembly_whole.gif)
+![assembly](./rendering/assembly.avi)
 
 ### 3D-Printed Parts
-
-![body_assembly](./rendering/assembly.avi)
 
 | Filename       | Thumbnail                                                                                   | Required |
 | -------------- | ------------------------------------------------------------------------------------------- | -------- |
