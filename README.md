@@ -13,6 +13,7 @@ A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assis
 A 3D printed picture frame, built with ESP32/ESPhome:
 
 - A robust structure
+- can be used in portrait and landscape mode
 - home assistant integration
 - Example code
 
@@ -22,6 +23,19 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
 | ESP32 Dev Module           | <img src="./images/esp32.jpg" alt="esp32" width="300"/>                  | 1                 |           |
 | 7,5" ePaper Display HAT    | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/>  | 1                 |           |
+
+
+### ESP pinout to ePaper
+
+If you use the out-of-the-box solution from waveshare based on ESP8266, this is the pinout for the display:
+- Display model 50inV2alt
+- SPI CLK: GPIO13
+- SPI MOSI: GPIO14
+- CS: GPIO15
+- DC: GPIO27
+- RESET: GPIO26 
+- BUSY: GPIO25 (Inverted!)
+  
 
 ### Connection Diagram
 
@@ -51,10 +65,24 @@ See waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Man
 
 ## ESP home yaml
 
-TBD
-![hexapod_model_label](./images/hexapod_model_label.svg)
+
+Source code is under `./src_esphome` and is separated into packages in `./src_esphome/packages`
+
+- `epaper_display.yaml`: main file for ESP home configuration
+- `packages/device_basics.yaml`: Basic and hardware related configuration for ESP home. No business logic
+- `packages/standard_fonts.yaml`: Loads required fonts and glyphs/icons 
+
+
+
 
 ## home assistant configuration
 
-TBD
-![hexapod_model_label](./images/hexapod_model_label.svg)
+In the example we use weather data provided which need to be provided in a suitable format to sensors in ESP home devices. 
+For this, we need to modify configuration.yaml in order to query data and feed it into the right format in entities.
+
+Source code is under `./src_homeassistant`.
+
+- `epaper_package.yaml`: Extensions to configuration.yaml. Provided as separate package. 
+
+Can to be included in configuration via import directive (e.g. ```yaml packages: !include_dir_named packages```)
+
