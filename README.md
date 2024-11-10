@@ -21,7 +21,7 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 
 | Name                       | Thumbnail                                                                | Required          | Note      |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
-| ESP32 Dev Module           | <img src="./images/esp32.jpg" alt="esp32" width="300"/>                  | 1                 |           |
+| ESP32 Dev Module           | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>                  | 1                 |           |
 | 7,5" ePaper Display HAT    | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/>  | 1                 |           |
 
 
@@ -41,9 +41,14 @@ If you use the out-of-the-box solution from waveshare based on ESP8266, this is 
 
 See waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
 
+Please not thet this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
+
 ## Assembly
 
 ![assembly](./rendering/assembly.avi)
+
+Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
+Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
 
 ### 3D-Printed Parts
 
@@ -84,5 +89,5 @@ Source code is under `./src_homeassistant`.
 
 - `epaper_package.yaml`: Extensions to configuration.yaml. Provided as separate package. 
 
-Can to be included in configuration via import directive (e.g. ```yaml packages: !include_dir_named packages```)
+Can to be included in configuration via import directive (e.g. ```packages: !include_dir_named packages```)
 
