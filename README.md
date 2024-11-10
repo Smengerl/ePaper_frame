@@ -21,20 +21,20 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 
 | Name                       | Thumbnail                                                                | Required          | Note      |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
-| ESP32 Dev Module | 1 | Easiest way is to use pre-assembled display boards such as [this one](https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board) | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>  |
+| ESP32 Dev Module | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/> | 1 | Easiest way is to use pre-assembled display boards such as [this one](https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board) |
 | 7,5" ePaper Display HAT | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/> | 1 | There a dozens of different epaper displays available which require different configuration. I used [this one](https://www.waveshare.com/7.5inch-e-Paper-B.htm) |
 
 *Please note that this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
 
 ### ESP pinout to ePaper
 
-If you use the out-of-the-box solution from waveshare based on ESP8266, this is the pinout for the display:
+If you use the out-of-the-box solution from waveshare mentioned above, this is a working configuration and pinout for the display:
 - Display model 50inV2alt
 - SPI CLK: GPIO13
 - SPI MOSI: GPIO14
 - CS: GPIO15
 - DC: GPIO27
-- RESET: GPIO26 
+- RESET: GPIO26 (Reset duration 2ms)
 - BUSY: GPIO25 (Inverted!)
   
 
@@ -45,7 +45,7 @@ If you are using the preassembled component mentioned above, there is no need fo
 
 ## Assembly
 
-![assembly](./rendering/assembly.avi)
+![assembly](./print/rendering/assembly.avi)
 
 Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
 Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
