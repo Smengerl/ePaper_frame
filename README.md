@@ -21,12 +21,8 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 
 | Name                       | Thumbnail                                                                | Required          | Note      |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
-| ESP32 Dev Module (e.g. pre assembled display boards such as <a href"https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board">this one*</a>)           
-                             | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>                  
-                                                                                                        | 1                 |           |
-| 7,5" ePaper Display HAT    | 
-                               <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/>  
-                                                                                                        | 1                 |           |
+| ESP32 Dev Module | 1 | Easiest way is to use pre-assembled display boards such as [this one](https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board) | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>  |
+| 7,5" ePaper Display HAT | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/> | 1 | There a dozens of different epaper displays available which require different configuration. I used [this one](https://www.waveshare.com/7.5inch-e-Paper-B.htm) |
 
 *Please note that this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
 
