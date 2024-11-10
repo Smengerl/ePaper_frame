@@ -21,9 +21,14 @@ A 3D printed picture frame, built with ESP32/ESPhome:
 
 | Name                       | Thumbnail                                                                | Required          | Note      |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
-| ESP32 Dev Module           | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>                  | 1                 |           |
-| 7,5" ePaper Display HAT    | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/>  | 1                 |           |
+| ESP32 Dev Module (e.g. pre assembled display boards such as <a href"https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board">this one*</a>)           
+                             | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/>                  
+                                                                                                        | 1                 |           |
+| 7,5" ePaper Display HAT    | 
+                               <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/>  
+                                                                                                        | 1                 |           |
 
+*Please note that this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
 
 ### ESP pinout to ePaper
 
@@ -39,9 +44,8 @@ If you use the out-of-the-box solution from waveshare based on ESP8266, this is 
 
 ### Connection Diagram
 
-See waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
+If you are using the preassembled component mentioned above, there is no need for any further wiring. Just connect the flat wire of the display to the hat and you are good to go. For further details see waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
 
-Please not thet this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
 
 ## Assembly
 
