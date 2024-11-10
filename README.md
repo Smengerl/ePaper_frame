@@ -45,7 +45,7 @@ If you are using the preassembled component mentioned above, there is no need fo
 
 ## Assembly
 
-![assembly](./print/rendering/assembly.avi)
+![assembly](./print/rendering/assembly.gif)
 
 Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
 Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
