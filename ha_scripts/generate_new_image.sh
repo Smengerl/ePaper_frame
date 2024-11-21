@@ -2,6 +2,9 @@
 
 # Variables (replace with your actual values or accept as arguments)
 
+# Include the variables from another script
+source standard_config.sh
+
 # URL for the API
 MODEL_URL="https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev" 
 
@@ -13,28 +16,8 @@ PROMPT="A high-contrast black-and-white comic-style illustration designed for eP
 They are engaging in an activity together. The setting and activity are left open-ended, allowing for a natural depiction of a family moment. \
 The artwork features bold outlines, minimal shading, and a clean, simple style to ensure clear readability on the ePaper display."
 
-# File name to save the final image after it was transformed to png
-#OUTPUT_FILENAME="~/config/www/output.png" 
-OUTPUT_FILENAME="/config/www/output.png" 
-
-# File name to save the generated image
-#TEMP_IMAGE_FILENAME="~/config/www/output.jpg" 
-TEMP_IMAGE_FILENAME="/config/www/output.jpg"
-
-# File name to save the curl trace
-#TRACE_FILENAME="~/config/www/curl_log.txt" 
-TRACE_FILENAME="/config/www/curl_log.txt" 
-
-BACKUP_DIRECTORY="/config/www/epaper_backup_images" 
 
 
-# Dimensions of the output image
-HEIGHT=744 # need to be divisable by 8
-WIDTH=480 # need to be divisable by 8
-
-
-
-#cd /config/www
 
 # Step 1: Use curl to fetch the image
 echo "Fetching image from API..."
