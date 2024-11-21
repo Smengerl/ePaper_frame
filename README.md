@@ -1,4 +1,15 @@
-# ePaper frame for ESPhome
+# ePaper frame for ESP32
+
+A 3D printed picture frame that shows unique pictures every day, built with ESP32/ESPhome:
+
+- A robust 3D printed structure fitting into a regular IKEA picture frame
+- can be used in portrait and landscape mode
+- home assistant integration for flexible usage
+- Example code (e.g. AI image generator)
+- Power saving due to ESP32 deep sleep support
+
+
+## Mechanics
 
 A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assistant 
 
@@ -8,16 +19,37 @@ A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assis
 
 ![back2](./print/rendering/back_2.png)
 
-## Introduction
 
-A 3D printed picture frame, built with ESP32/ESPhome:
+### 3D-Printed Parts
 
-- A robust structure
-- can be used in portrait and landscape mode
-- home assistant integration
-- Example code
+| Filename       | Thumbnail                                                                                   | Required |
+| -------------- | ------------------------------------------------------------------------------------------- | -------- |
+| frame             | <img src="./print/rendering/frame.png" alt="frame" width="300"/>                         | 1        |
+| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate" width="300"/> | 1        |
+| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box" width="300"/>                     | 1        |
+| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box" width="300"/> | 1        |
+| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid" width="300"/>               | optional, required for wall hanging in portrait mode |
+| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid" width="300"/>                 | option, required for wall hanging in landscape mode |
+
+### Required screws
+
+| Name      | Spec    | Required |
+| --------- | ------- | -------- |
+| Screw     | M2 6mm  | 4        |
+| Screw     | M2 10mm | 14       |
+
+## Assembly
+
+![assembly](./print/rendering/assembly.gif)
+
+Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
+Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
+
+
 
 ## Electronics
+
+### Part list
 
 | Name                       | Thumbnail                                                                | Required          | Note      |
 | -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
@@ -36,38 +68,10 @@ If you use the out-of-the-box solution from waveshare mentioned above, this is a
 - DC: GPIO27
 - RESET: GPIO26 (Reset duration 2ms)
 - BUSY: GPIO25 (Inverted!)
-  
 
 ### Connection Diagram
 
 If you are using the preassembled component mentioned above, there is no need for any further wiring. Just connect the flat wire of the display to the hat and you are good to go. For further details see waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
-
-
-## Assembly
-
-![assembly](./print/rendering/assembly.gif)
-
-Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
-Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
-
-### 3D-Printed Parts
-
-| Filename       | Thumbnail                                                                                   | Required |
-| -------------- | ------------------------------------------------------------------------------------------- | -------- |
-| frame             | <img src="./print/rendering/frame.png" alt="frame" width="300"/>                         | 1        |
-| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate" width="300"/> | 1        |
-| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box" width="300"/>                     | 1        |
-| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box" width="300"/> | 1        |
-| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid" width="300"/>               | optional, required for wall hanging in portrait mode |
-| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid" width="300"/>                 | option, required for wall hanging in landscape mode |
-
-#### Required screws
-
-| Name      | Spec    | Required |
-| --------- | ------- | -------- |
-| Screw     | M2 6mm  | 4        |
-| Screw     | M2 10mm | 14       |
-
 
 
 # Example usage: ePaper Display with ESP home
