@@ -68,26 +68,129 @@ Also you can mount the ESP box facing the cable holder in the other direction th
 | Screw     | M2 6mm  | 4        |
 | Screw     | M2 10mm | 14       |
 
-## ESP home yaml
 
 
-Source code is under `./src_esphome` and is separated into packages in `./src_esphome/packages`
+# Example usage: ePaper Display with ESP home
+
+This example uses the epaper picture frame to retrieve a different picture every day or on certain triggers via home assistant. 
+
+The approach is based on integerating the ePaper frame as a device in ESPhome.
+An automation and helper scripts are used in homeassistant to generate suitable images on a certain time interval or other triggers.
+In the meanwhile the ESP is set to deep sleep mode to preserve energy.
+
+
+
+## ESP home integration
+
+This ESPHome project configures an ePaper display as a smart and energy-efficient solution for displaying dynamic content, such as images fetched from Home Assistant. It leverages deep sleep capabilities to optimize power usage and supports features like manual refresh, automatic updates, and offline fallback modes.
+
+Features
+- Dynamic Image Display: Displays images fetched from a given URL (default: from Home Assistant local directory). Supports resizing and rendering PNG images directly on the ePaper display.
+- Support for automations: Exposes actions (e.g., reload image, render) and sends feedback via events for use in HA automations   
+- Deep Sleep Optimization: Offers deep sleep to reduce power consumption. Can be manually woken up via boot button.
+- Automatic and Manual Refresh: Option for automatic display refresh of the ePaper display at specified intervals as well as full control via manual refresh
+- Offline Fallback: Displays a local "offline" image when Wi-Fi or image download fails.
+- HA GUI support: Debug and configuration entities are provided in device settings in HA
+
+
+Source code is under `./esphome_src`
 
 - `epaper_display.yaml`: main file for ESP home configuration
-- `packages/device_basics.yaml`: Basic and hardware related configuration for ESP home. No business logic
-- `packages/standard_fonts.yaml`: Loads required fonts and glyphs/icons 
+- `device_basics.yaml`: Basic and hardware related configuration for ESP home. No business logic
+- `offline.png`: Fallback image
+
+## home assistant automation
+
+You can use the ePaper ESP home device in automations in home assistant.
+
+The following automation can serve as an example. Twice a day it gets a new image and refreshes the ePaper display while it is in deep sleep mode the remaining time.
+Such automation can take several different image sources for which you will find some examples further below.
+Source code for these scripts is under `./ha_scripts`
+
+```yaml
+triggers:
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: epaper_display_epaper_display
+conditions: []
+actions:
+  - action: remote_command_line.generate_ai_image
+    data: {}
+    enabled: false
+  - action: remote_command_line.get_wallhaven_potd
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 3
+      seconds: 0
+      milliseconds: 0
+  - action: esphome.epaper_display_epaper_reload_image
+    metadata: {}
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 3
+      seconds: 0
+      milliseconds: 0
+  - if:
+      - condition: time
+        after: "12:00:00"
+    then:
+      - action: esphome.epaper_display_epaper_sleep_until
+        metadata: {}
+        data:
+          target_hour: 0
+          target_minute: 0
+    else:
+      - action: esphome.epaper_display_epaper_sleep_until
+        metadata: {}
+        data:
+          target_hour: 12
+          target_minute: 0
+mode: single
+```
+
+## Example Scripts
+
+### Notes on usage
+
+- Make the scripts usable as actions in HA automations via commandline, shell or remotecommandline addons
+- Check if your HA has ffmpeg installed (use `docker container exec homeassistant ls /usr/bin | less` - note that you need to disable protection mode in terminal to run this command). Also you might want to configure ffmpeg for homeassistant as well by adding a configuration entry in your configuration.yaml. See integration description.
+- Make sure to have the scripts set to executable via chmod
+- Adapt the parameters in the script as needed
 
 
+### AI image generator script
+
+`ha_scripts/generate_new_image.sh`: Image Generation from Hugging Face API
+
+This script uses a text-to-image AI to create an image for a given prompt to display this on the ePaper displays. 
+It integrates with the Hugging Face API (FLUX.1-dev) to generate images based on a specified prompt, processes the resulting image, and organizes backups for future use.
+- Sends a prompt to the Hugging Face model API (FLUX.1-dev) to generate an image to display on the epaper screen a high-resolution .jpg image of the specified dimensions.
+- Converts the generated .jpg image to a .png format using ffmpeg.
+- Automatically creates a timestamped backup of the processed image in a designated backup directory.
+- Captures detailed curl logs to trace the API call for debugging purposes
 
 
-## home assistant configuration
+### Lorem Picsum picture
 
-In the example we use weather data provided which need to be provided in a suitable format to sensors in ESP home devices. 
-For this, we need to modify configuration.yaml in order to query data and feed it into the right format in entities.
+`ha_scripts/get_lorem_picsum.sh`: Get random picture from Lorem Picsum API
 
-Source code is under `./src_homeassistant`.
+This script automates the process of downloading a random grayscale image from Lorem Picsum, converting it to PNG format, and backing up both the original and processed images.
 
-- `epaper_package.yaml`: Extensions to configuration.yaml. Provided as separate package. 
+- Random Image Download: Fetches a grayscale image with specified dimensions (WIDTH x HEIGHT) from Lorem Picsum. Saves the image as a .jpg file.
+- Image Processing: Converts the .jpg image to .png format using ffmpeg.
+- Backup Management: Creates a timestamped backup of both the original .jpg and processed .png images.
 
-Can to be included in configuration via import directive (e.g. ```packages: !include_dir_named packages```)
+
+### Wallhaven picture of the day
+
+`ha_scripts/get_wallhaven_potd.sh`: Get picture of the day from wallhaven API
+
+This script fetches a random image from the Wallhaven API, processes it to meet the specified dimensions and transforms it to a black-and-white images suitable for ePaper displays.
+
+- Image Fetching: Connects to the Wallhaven API to retrieve a random image URL. Downloads the selected image to a temporary .jpg file.
+- Image Processing: Dynamically calculates cropping dimensions to preserve the largest possible portion of the image while maintaining the target aspect ratio. Converts the cropped image to .png format using ffmpeg.
+- Backup Management: Automatically creates a timestamped backup of both the original and processed images.
 
