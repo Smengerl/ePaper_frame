@@ -60,7 +60,7 @@ ASPECT_RATIO=$(echo "$WIDTH / $HEIGHT" | bc -l)
 
 # Determine cropping dimensions dynamically
 echo "Retrieving input image dimensions..."
-DIMENSIONS=$(ffmpeg -i "$INPUT_IMAGE" 2>&1 | grep 'Stream #0' | awk -F'[ ,]' '{for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+x[0-9]+$/) print $i}')
+DIMENSIONS=$(ffmpeg -i "$TEMP_IMAGE_FILENAME" 2>&1 | grep 'Stream #0' | awk -F'[ ,]' '{for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+x[0-9]+$/) print $i}')
 
 INPUT_WIDTH=$(echo "$DIMENSIONS" | cut -d'x' -f1)
 INPUT_HEIGHT=$(echo "$DIMENSIONS" | cut -d'x' -f2)
@@ -91,7 +91,7 @@ echo "Crop dimensions: width=$CROP_WIDTH, height=$CROP_HEIGHT, x=$OFFSET_X, y=$O
 
 
 # Run ffmpeg with dynamically determined crop and scale
-ffmpeg -i "$TEMP_IMAGE_FILENAME" -vf "format=gray,crop=${CROP_WIDTH}:${CROP_HEIGHT}:${OFFSET_X}:${OFFSET_Y},scale=${TARGET_WIDTH}:${TARGET_HEIGHT}:sws_dither=bayer" -c:v png "$OUTPUT_FILENAME"
+ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -vf "format=gray,crop=${CROP_WIDTH}:${CROP_HEIGHT}:${OFFSET_X}:${OFFSET_Y},scale=${WIDTH}:${HEIGHT}:sws_dither=bayer" -c:v png "$OUTPUT_FILENAME"
 
 # Check if the ffmpeg command succeeded
 if [ $? -eq 0 ]; then
