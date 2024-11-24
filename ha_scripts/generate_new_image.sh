@@ -265,10 +265,6 @@ fi
 
 # Process the image using the helper function
 process_image_with_ffmpeg 
-if [ $? -ne 0 ]; then
-    exit 1
-fi
-echo "Image saved as $OUTPUT_FILENAME."
 
 # Backup result
 backup_file 
