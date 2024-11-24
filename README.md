@@ -121,9 +121,6 @@ conditions: []
 actions:
   - action: remote_command_line.generate_ai_image
     data: {}
-    enabled: false
-  - action: remote_command_line.get_wallhaven_potd
-    data: {}
   - delay:
       hours: 0
       minutes: 3
@@ -159,10 +156,10 @@ mode: single
 
 ### Notes on usage
 
-- Make the scripts usable as actions in HA automations via commandline, shell or remotecommandline addons
-- Check if your HA has ffmpeg installed (use `docker container exec homeassistant ls /usr/bin | less` - note that you need to disable protection mode in terminal to run this command). Also you might want to configure ffmpeg for homeassistant as well by adding a configuration entry in your configuration.yaml. See integration description.
 - Make sure to have the scripts set to executable via chmod
 - Adapt the parameters in the script as needed
+- Make the scripts usable as actions in HA automations via commandline, shell or remotecommandline addons. Note that HA command line commands must not take longer than 60s while the free tier of hugging face AI models might take longer to provide a result. You might want to use the remotecommandline addon (https://github.com/koying/ha-remote-command-line.git) instead, which allows to set a custom timeout. 
+- Double check if your HA has ffmpeg installed. For this, you need to execute the command in the HA docker container, use `docker container exec homeassistant ls /usr/bin | less. Note that you need to disable protection mode in terminal to run this command. Also you might want to configure ffmpeg for homeassistant as well by adding a configuration entry in your configuration.yaml. See ffmpeg integration description.
 
 
 ### AI image generator script
