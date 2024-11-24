@@ -16,3 +16,8 @@ HEIGHT=744 # need to be divisable by 8
 WIDTH=480 # need to be divisable by 8
 
 BACKUP_DIRECTORY="/config/www/backup_images" 
+
+LOG_FILE="/config/www/log.log" 
+
+# Redirect output to log file
+exec > $LOG_FILE 2>&1
