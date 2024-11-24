@@ -3,7 +3,7 @@
 # Variables (replace with your actual values or accept as arguments)
 
 # Include the variables from another script
-source standard_config.sh
+source /config/esphome/epaper_display_packages/standard_config.sh
 
 
 
@@ -20,28 +20,16 @@ else
     exit 1
 fi
 
-echo "Image saved as $TEMP_IMAGE_FILENAME."
 
-
-
-# Step 2: Use ffmpeg to process the image into a video
-echo "Converting image to PNG..."
-#ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -vf format=gray,maskfun=low=128:high=128:fill=0:sum=128 -c:v png "$OUTPUT_FILENAME"
-ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -c:v png "$OUTPUT_FILENAME"
-
-# Check if ffmpeg succeeded
+# Process the image using the helper function
+process_image_with_ffmpeg 
 if [ $? -ne 0 ]; then
-  echo "Error: Failed to convert image to PNG."
-  exit 1
+    exit 1
 fi
-
 echo "Image saved as $OUTPUT_FILENAME."
 
-
-# Backup file for later use
-mkdir $BACKUP_DIRECTORY
-# cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
-cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
+# Backup result
+backup_file 
 
 
 

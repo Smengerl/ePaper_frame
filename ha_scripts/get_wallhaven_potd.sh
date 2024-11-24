@@ -3,7 +3,7 @@
 # Variables (replace with your actual values or accept as arguments)
 
 # Include the variables from another script
-source standard_config.sh
+source /config/esphome/epaper_display_packages/standard_config.sh
 
 # Wallhaven API endpoint
 API_URL="https://wallhaven.cc/api/v1/search?q=random"
@@ -45,69 +45,15 @@ else
 fi
 
 
-
-# Use ffmpeg to process the image into a video
-echo "Converting image to PNG..."
-
-
-
-
-# Constants for target aspect ratio and dimensions
-ASPECT_RATIO=$(echo "$WIDTH / $HEIGHT" | bc -l)
-
-
-
-
-# Determine cropping dimensions dynamically
-echo "Retrieving input image dimensions..."
-DIMENSIONS=$(ffmpeg -i "$TEMP_IMAGE_FILENAME" 2>&1 | grep 'Stream #0' | awk -F'[ ,]' '{for (i=1; i<=NF; i++) if ($i ~ /^[0-9]+x[0-9]+$/) print $i}')
-
-INPUT_WIDTH=$(echo "$DIMENSIONS" | cut -d'x' -f1)
-INPUT_HEIGHT=$(echo "$DIMENSIONS" | cut -d'x' -f2)
-echo "Width: $INPUT_WIDTH, Height: $INPUT_HEIGHT", Dimensions: $DIMENSIONS
-
-
-if [ -z "$INPUT_WIDTH" ] || [ -z "$INPUT_HEIGHT" ]; then
-    echo "Failed to retrieve input dimensions."
+# Process the image using the helper function
+process_image_with_ffmpeg 
+if [ $? -ne 0 ]; then
     exit 1
 fi
-
-# Calculate crop dimensions based on aspect ratio
-if (( $(echo "$INPUT_WIDTH / $INPUT_HEIGHT > $ASPECT_RATIO" | bc -l) )); then
-    # Wider than target aspect ratio; adjust width
-    CROP_WIDTH=$(echo "$INPUT_HEIGHT * $ASPECT_RATIO" | bc -l | awk '{print int($1+0.5)}')
-    CROP_HEIGHT=$INPUT_HEIGHT
-    OFFSET_X=$(echo "($INPUT_WIDTH - $CROP_WIDTH) / 2" | bc -l | awk '{print int($1+0.5)}')
-    OFFSET_Y=0
-else
-    # Taller than target aspect ratio; adjust height
-    CROP_WIDTH=$INPUT_WIDTH
-    CROP_HEIGHT=$(echo "$INPUT_WIDTH / $ASPECT_RATIO" | bc -l | awk '{print int($1+0.5)}')
-    OFFSET_X=0
-    OFFSET_Y=$(echo "($INPUT_HEIGHT - $CROP_HEIGHT) / 2" | bc -l | awk '{print int($1+0.5)}')
-fi
-
-echo "Crop dimensions: width=$CROP_WIDTH, height=$CROP_HEIGHT, x=$OFFSET_X, y=$OFFSET_Y"
-
-
-# Run ffmpeg with dynamically determined crop and scale
-ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -vf "format=gray,crop=${CROP_WIDTH}:${CROP_HEIGHT}:${OFFSET_X}:${OFFSET_Y},scale=${WIDTH}:${HEIGHT}:sws_dither=bayer" -c:v png "$OUTPUT_FILENAME"
-
-# Check if the ffmpeg command succeeded
-if [ $? -eq 0 ]; then
-    echo "Image processed successfully: $OUTPUT_IMAGE"
-else
-    echo "Failed to process the image."
-    exit 1
-fi
-
 echo "Image saved as $OUTPUT_FILENAME."
 
-
-# Backup file for later use
-mkdir $BACKUP_DIRECTORY
-# cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
-cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
+# Backup result
+backup_file 
 
 
 

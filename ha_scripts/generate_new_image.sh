@@ -234,6 +234,8 @@ The artwork is a high-contrast black-and-white comic-style illustration designed
 It features bold outlines, minimal shading, and a clean, simple style to ensure clear readability on the ePaper display."
 
 
+echo "Prompt: $PROMPT"
+
 # Step 1: Use curl to fetch the image
 echo "Fetching image from API..."
 curl \
@@ -251,35 +253,23 @@ curl \
     }\
   }"
 
-# Check if curl succeeded
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to fetch image from the API."
-  exit 1
+
+# Check if the download was successful
+if [ $? -eq 0 ]; then
+    echo "Image downloaded successfully as $TEMP_IMAGE_FILENAME."
+else
+    echo "Failed to download the image."
+    exit 1
 fi
 
-echo "Image saved as $TEMP_IMAGE_FILENAME."
 
-
-
-# Step 2: Use ffmpeg to process the image into a video
-echo "Converting image to PNG..."
-ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -c:v png "$OUTPUT_FILENAME"
-
-# Check if ffmpeg succeeded
+# Process the image using the helper function
+process_image_with_ffmpeg 
 if [ $? -ne 0 ]; then
-  echo "Error: Failed to convert image to PNG."
-  exit 1
+    exit 1
 fi
-
 echo "Image saved as $OUTPUT_FILENAME."
 
+# Backup result
+backup_file 
 
-# Backup file for later use
-mkdir $BACKUP_DIRECTORY
-#cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
-cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
-
-
-
-# rm $TEMP_IMAGE_FILENAME
-# echo "Temporary image removed $TEMP_IMAGE_FILENAME."
