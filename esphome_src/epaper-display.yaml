@@ -16,6 +16,7 @@ esphome:
   on_boot:
     priority: 200.0 # Network connections like MQTT/native API are set up at this priority.
     then:
+      - light.turn_on: onboard_led  # Turn on the LED during startup
       - wait_until: api.connected
 
       # need to be called in order for the image to be downloaded as no update interval is set (Alternative: Wifi-->onConnect)
@@ -40,11 +41,24 @@ esphome:
           }
 
 
+# Onboard LED control
+output:
+  - platform: gpio
+    id: onboard_led_output
+    pin: GPIO2  # Default onboard LED pin for most ESP32 boards
+
+light: 
+  - platform: status_led
+    name: "Onboard Status LED"
+    icon: "mdi:led-on"
+    id: "onboard_led"
+    output: onboard_led_output
+    entity_category: diagnostic
 
 
 
 
-# Example event configuration
+# event configuration
 event:
   - platform: template
     name: startup
@@ -58,7 +72,6 @@ event:
       then:
         - lambda: |-
             ESP_LOGD("epaper-display.yaml", "Event %s triggered.", event_type.c_str());
-
 
 
 
@@ -236,6 +249,8 @@ api:
     then:
       - lambda: |-
           ESP_LOGI("epaper-display.yaml", "Sleep for %d min", min);
+          id(onboard_led).turn_off(); // Turn off the LED before deep sleep
+
           id(deep_sleep_id).set_sleep_duration(min*60*1000); // parameter is in min, needs to be converted to ms
           id(deep_sleep_id).begin_sleep();
 
@@ -263,6 +278,7 @@ api:
               int difference = (int)difftime(sleep_until_time_t, current_time_t); // Unterschied in Sekunden
 
               ESP_LOGW("epaper-display.yaml", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", target_hour, target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
+              id(onboard_led).turn_off(); // Turn off the LED before deep sleep
               id(deep_sleep_id).set_sleep_duration(difference*1000); 
               id(deep_sleep_id).begin_sleep();
 
