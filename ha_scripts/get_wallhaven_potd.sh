@@ -106,10 +106,10 @@ echo "Image saved as $OUTPUT_FILENAME."
 
 # Backup file for later use
 mkdir $BACKUP_DIRECTORY
-cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
+# cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
 cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
 
 
 
 # rm $TEMP_IMAGE_FILENAME
-echo "Temporary image removed $TEMP_IMAGE_FILENAME."
+# echo "Temporary image removed $TEMP_IMAGE_FILENAME."
