@@ -22,14 +22,14 @@ A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assis
 
 ### 3D-Printed Parts
 
-| Filename       | Thumbnail                                                                                   | Required |
-| -------------- | ------------------------------------------------------------------------------------------- | -------- |
-| frame             | <img src="./print/rendering/frame.png" alt="frame" width="300"/>                         | 1        |
-| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate" width="300"/> | 1        |
-| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box" width="300"/>                     | 1        |
-| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box" width="300"/> | 1        |
-| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid" width="300"/>               | optional, required for wall hanging in portrait mode |
-| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid" width="300"/>                 | option, required for wall hanging in landscape mode |
+| Filename       | Thumbnail                                                                       | Required |
+| -------------- | ------------------------------------------------------------------------------- | -------- |
+| frame             | <img src="./print/rendering/frame.png" alt="frame"/>                         | 1        |
+| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate"/> | 1        |
+| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box"/>                     | 1        |
+| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box"/> | 1        |
+| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid"/>               | optional, required for wall hanging in portrait mode |
+| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid"/>                 | option, required for wall hanging in landscape mode |
 
 ### Required screws
 
