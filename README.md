@@ -90,8 +90,8 @@ This ESPHome project configures an ePaper display as a smart and energy-efficien
 
 Features
 - Dynamic Image Display: Displays images fetched from a given URL (default: from Home Assistant local directory). Supports resizing and rendering PNG images directly on the ePaper display.
-- Support for automations: Exposes actions (e.g., reload image, render) and sends feedback via events for use in HA automations   
-- Deep Sleep Optimization: Offers deep sleep to reduce power consumption. Can be manually woken up via boot button.
+- Support for automations: Exposes actions (e.g., reload image, render) that can be used in HA automations. Actions can be used asynchronously (default) and also synchronously via waiting for callback events, see example below   
+- Deep Sleep Optimization: Offers deep sleep to reduce power consumption. Can be manually woken up via boot button. Event callback to trigger subsequent automations. 
 - Automatic and Manual Refresh: Option for automatic display refresh of the ePaper display at specified intervals as well as full control via manual refresh
 - Offline Fallback: Displays a local "offline" image when Wi-Fi or image download fails.
 - HA GUI support: Debug and configuration entities are provided in device settings in HA
@@ -115,8 +115,11 @@ Source code for these scripts is under `./ha_scripts`
 triggers:
   - trigger: homeassistant
     event: start
-  - trigger: event
-    event_type: epaper_display_epaper_display
+  - trigger: state
+    entity_id:
+    - event.epaper_display_startup_reason
+    attribute: event_type
+    to: deep_sleep
 conditions: []
 actions:
   - action: remote_command_line.generate_ai_image
@@ -130,6 +133,22 @@ actions:
     metadata: {}
     data: {}
   - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+    enabled: true
+  - action: esphome.epaper_display_epaper_reload_image
+    metadata: {}
+    data: {}
+  - wait_for_trigger:
+    - trigger: state
+      entity_id:
+      - event.epaper_display_rendering
+      to: render_complete
+      attribute: event_type
+    continue_on_timeout: true
+    timeout:
       hours: 0
       minutes: 3
       seconds: 0

@@ -36,7 +36,7 @@ esphome:
               break;
             default:
               ESP_LOGW("epaper-display.yaml", "Booting. Wakeup reason: %d", wakeup_cause);
-              id(startup_events).trigger("unknown");
+              id(startup_events).trigger("unknown_wakeup_reason");
               break;
           }
 
@@ -54,6 +54,7 @@ light:
     id: "onboard_led"
     output: onboard_led_output
     entity_category: diagnostic
+    internal: true
 
 
 
@@ -61,17 +62,41 @@ light:
 # event configuration
 event:
   - platform: template
-    name: startup
+    name: Startup Reason
     id: startup_events
     icon: "mdi:sleep"
-    event_types: # list of supported events
+    event_types: 
       - deep_sleep
       - regular
-      - unknown
+      - unknown_wakeup_reason
     on_event:
       then:
         - lambda: |-
-            ESP_LOGD("epaper-display.yaml", "Event %s triggered.", event_type.c_str());
+            ESP_LOGD("epaper-display.yaml", "Startup reason event %s triggered.", event_type.c_str());
+
+  - platform: template
+    name: Rendering
+    id: rendering_events
+    icon: "mdi:brush"
+    event_types:
+      - render_complete
+    on_event:
+      then:
+        - lambda: |-
+            ESP_LOGD("epaper-display.yaml", "Render complete event %s triggered.", event_type.c_str());
+
+  - platform: template
+    name: Image Downloading
+    id: image_downloading_events
+    icon: "mdi:download"
+    event_types:
+      - image_downloading_complete
+      - image_downloading_failed
+    on_event:
+      then:
+        - lambda: |-
+            ESP_LOGD("epaper-display.yaml", "Image downloading complete event %s triggered.", event_type.c_str());
+
 
 
 
@@ -323,10 +348,12 @@ online_image:
       - then:
         - lambda: |-
             ESP_LOGI("online_image", "Image download finished");
+            id(image_downloading_events).trigger("image_downloading_complete");
         - component.update: eink_display
     on_error:
         - lambda: |-
             ESP_LOGE("online_image", "Could not download the image");
+            id(image_downloading_events).trigger("image_downloading_failed");
 
 
 
@@ -380,3 +407,4 @@ display:
 
       ESP_LOGW(TAG, "Rendering done");
       id(deep_sleep_id).allow_deep_sleep();
+      id(rendering_events).trigger("render_complete");
