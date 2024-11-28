@@ -9,10 +9,10 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 - Power saving due to ESP32 deep sleep support
 
 
-<div style="display: flex; gap: 10px;">
+<div style="text-align: center; display: flex; flex-direction: column; gap: 20px;">
 
-<img src="./print/fotos/foto_front.jpg" alt="foto_front" style="width: 45%;"/>
-<img src="./print/fotos/foto_back.jpg" alt="foto_back" style="width: 45%;"/>
+<img src="./print/fotos/foto_front.jpg" alt="foto_front"/>
+<img src="./print/fotos/foto_back.jpg" alt="foto_back"/>
 
 </div>
 
@@ -21,11 +21,12 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 
 A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assistant 
 
-<div style="text-align: center; display: flex; flex-direction: column; gap: 20px;">
+Renderings:
+<div style="display: flex; gap: 10px;">
 
-<img src="./print/rendering/front.png" alt="front" style="width: 80%;"/>
-<img src="./print/rendering/back.png" alt="back" style="width: 80%;"/>
-<img src="./print/rendering/back_2.png" alt="back" style="width: 80%;"/>
+<img src="./print/rendering/front.png" alt="front" style="width: 30%;"/>
+<img src="./print/rendering/back.png" alt="back" style="width: 30%;"/>
+<img src="./print/rendering/back_2.png" alt="back" style="width: 30%;"/>
 
 </div>
 
