@@ -8,7 +8,7 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 - Example code (e.g. AI image generator)
 - Power saving due to ESP32 deep sleep support
 
-<img src="./print/fotos/example_usage.jpg" alt="example_usage"/>
+<img src="./print/fotos/example_usage.png" alt="example_usage"/>
 
 
 ## Mechanics
