@@ -8,27 +8,18 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 - Example code (e.g. AI image generator)
 - Power saving due to ESP32 deep sleep support
 
-
-<div style="text-align: center; display: flex; flex-direction: column; gap: 20px;">
-
-<img src="./print/fotos/foto_front.jpg" alt="foto_front"/>
-<img src="./print/fotos/foto_back.jpg" alt="foto_back"/>
-
-</div>
+<img src="./print/fotos/example_usage.jpg" alt="example_usage"/>
 
 
 ## Mechanics
 
 A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assistant 
 
-Renderings:
-<div style="display: flex; gap: 10px;">
-
-<img src="./print/rendering/front.png" alt="front" style="width: 30%;"/>
-<img src="./print/rendering/back.png" alt="back" style="width: 30%;"/>
-<img src="./print/rendering/back_2.png" alt="back" style="width: 30%;"/>
-
-</div>
+Renderings / Prototype:
+| Front                                                | Back                                                 | Isometric |
+| ---------------------------------------------------- | ---------------------------------------------------- | --------- |
+| <img src="./print/rendering/front.png" alt="front"/> | <img src="./print/rendering/back.png" alt="back"/>   | <img src="./print/rendering/iso.png" alt="iso"/> |
+| <img src="./print/photos/front.png" alt="front"/>      | <img src="./print/photos/back.png" alt="back"/>        | <img src="./print/photos/iso.png" alt="iso"/> |
 
 
 ### 3D-Printed Parts
