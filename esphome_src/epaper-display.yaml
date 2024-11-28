@@ -17,11 +17,8 @@ esphome:
     priority: 200.0 # Network connections like MQTT/native API are set up at this priority.
     then:
       - light.turn_on: onboard_led  # Turn on the LED during startup
-      - wait_until: api.connected
 
-      # need to be called in order for the image to be downloaded as no update interval is set (Alternative: Wifi-->onConnect)
-      - component.update: online_image_id 
-
+      - wait_until: api.connected # Wait for API to be conected and then send event informing about startup reason
       - lambda: |-
           auto wakeup_cause = esp_sleep_get_wakeup_cause();
 
@@ -39,6 +36,14 @@ esphome:
               id(startup_events).trigger("unknown_wakeup_reason");
               break;
           }
+
+          if (id(auto_load_render).state) {
+            ESP_LOGI("epaper-display.yaml", "Automatic downloading and rendering on startup started");
+            id(online_image_id).update();
+          } else {
+            ESP_LOGD("epaper-display.yaml", "No automatic downloading and rendering on startup");
+          }
+
 
 
 # Onboard LED control
@@ -69,10 +74,10 @@ event:
       - deep_sleep
       - regular
       - unknown_wakeup_reason
-    on_event:
-      then:
-        - lambda: |-
-            ESP_LOGD("epaper-display.yaml", "Startup reason event %s triggered.", event_type.c_str());
+    #on_event:
+    #  then:
+    #    - lambda: |-
+    #        ESP_LOGD("epaper-display.yaml", "Startup reason event %s triggered.", event_type.c_str());
 
   - platform: template
     name: Rendering
@@ -80,10 +85,10 @@ event:
     icon: "mdi:brush"
     event_types:
       - render_complete
-    on_event:
-      then:
-        - lambda: |-
-            ESP_LOGD("epaper-display.yaml", "Render complete event %s triggered.", event_type.c_str());
+    #on_event:
+    #  then:
+    #    - lambda: |-
+    #        ESP_LOGD("epaper-display.yaml", "Render complete event %s triggered.", event_type.c_str());
 
   - platform: template
     name: Image Downloading
@@ -92,11 +97,22 @@ event:
     event_types:
       - image_downloading_complete
       - image_downloading_failed
-    on_event:
-      then:
-        - lambda: |-
-            ESP_LOGD("epaper-display.yaml", "Image downloading complete event %s triggered.", event_type.c_str());
+    #on_event:
+    #  then:
+    #    - lambda: |-
+    #        ESP_LOGD("epaper-display.yaml", "Image downloading complete event %s triggered.", event_type.c_str());
 
+
+
+
+# Controls whether the display shall automatically download and render the image on startup
+switch:
+  - platform: template
+    name: "Download and render on startup"
+    id: auto_load_render
+    icon: "mdi:cloud-download-outline"
+    restore_mode: RESTORE_DEFAULT_ON
+    optimistic: true
 
 
 
@@ -182,7 +198,7 @@ globals:
 button:
   - platform: template
     name: "Reload image"
-    entity_category: config
+    entity_category: diagnostic
     on_press:
       - lambda: |-
           id(online_image_id).update();
