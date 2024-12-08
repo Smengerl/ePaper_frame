@@ -101,48 +101,39 @@ Features
 
 Source code is under `./esphome_src`
 
-- `epaper_display.yaml`: main file for ESP home configuration
-- `device_basics.yaml`: Basic and hardware related configuration for ESP home. No business logic
-- `offline.png`: Fallback image
+- `/epaper_display.yaml`: main file for ESP home configuration, contains the relevant source code, imports all following packages
+- `/epaper_display_packages/device_basics.yaml`: Basic hardware related configuration for ESP and display, no logic
+- `/shared_packages/debug_basics.yaml`: Adds debug releated entities (optional), generic - not limited to use in this project
+- `/shared_packages/deep_sleep.yaml`: Contains all deep sleep related code (optional), generic - not limited to use in this project
+- `/images/offline.png`: Fallback image
 
 ## home assistant automation
 
 You can use the ePaper ESP home device in automations in home assistant.
 
-The following automation can serve as an example. Twice a day it gets a new image and refreshes the ePaper display while it is in deep sleep mode the remaining time.
-Such automation can take several different image sources for which you will find some examples further below.
+The following automation can serve as an example. 
+- Once a day at 6:00 it creates a new image and refreshes the ePaper display while it is put to deep sleep all other times. 
+- As the script is being triggered when the picture frame wakes up, you can also trigger creating a new image by waking up the frame manually via the boot-button on ESP.
+- Such automation can use different images sources for which you will find some examples further below.
+
+
 Source code for these scripts is under `./ha_scripts`
 
 ```yaml
-triggers:
+  alias: Create AI image
+  description: Create an fresh AI image every day at 6:00 on the picture frame with deep sleep support
+  triggers:
   - trigger: homeassistant
     event: start
   - trigger: state
     entity_id:
-    - event.epaper_display_startup_reason
-    attribute: event_type
-    to: deep_sleep
-conditions: []
-actions:
+    - binary_sensor.epaper_display_status
+    to: 'on'
+  conditions: []
+  actions:
   - action: remote_command_line.generate_ai_image
     data: {}
-  - delay:
-      hours: 0
-      minutes: 3
-      seconds: 0
-      milliseconds: 0
-  - action: esphome.epaper_display_epaper_reload_image
-    metadata: {}
-    data: {}
-  - delay:
-      hours: 0
-      minutes: 5
-      seconds: 0
-      milliseconds: 0
     enabled: true
-  - action: esphome.epaper_display_epaper_reload_image
-    metadata: {}
-    data: {}
   - wait_for_trigger:
     - trigger: state
       entity_id:
@@ -155,21 +146,11 @@ actions:
       minutes: 3
       seconds: 0
       milliseconds: 0
-  - if:
-      - condition: time
-        after: "12:00:00"
-    then:
-      - action: esphome.epaper_display_epaper_sleep_until
-        metadata: {}
-        data:
-          target_hour: 0
-          target_minute: 0
-    else:
-      - action: esphome.epaper_display_epaper_sleep_until
-        metadata: {}
-        data:
-          target_hour: 12
-          target_minute: 0
+  - action: esphome.epaper_display_sleep_until
+    metadata: {}
+    data:
+      target_minute: 0
+      target_hour: 6
 mode: single
 ```
 
