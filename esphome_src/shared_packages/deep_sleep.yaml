@@ -1,0 +1,94 @@
+sensor:
+# Sensor to provide the wakeup cause (e.g. when using deep sleep)
+  - platform: template
+    name: "Wakeup Cause"
+    id: boot_wakeup_cause
+    update_interval: never
+    accuracy_decimals: 0
+
+# Sensor to store the time of the wakeup
+  - platform: template
+    name: "Last boot"
+    id: boot_timestamp
+    device_class: timestamp
+    update_interval: never
+
+
+esphome:
+  on_boot:
+    priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
+    then:
+      - lambda: |-
+          id(boot_timestamp).publish_state(id(esptime).now().timestamp); //.strftime("%Y-%m-%dT%H:%M:%S"));
+          auto wakeup_cause = esp_sleep_get_wakeup_cause();
+          id(boot_wakeup_cause).publish_state(wakeup_cause);
+
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+deep_sleep:
+  id: deep_sleep_id
+
+  # Manual wakeup on "boot" button (pressed = low)
+  wakeup_pin:
+    number: GPIO0
+    inverted: true
+    mode: INPUT_PULLUP
+    ignore_strapping_warning: true
+
+#-------------------------------------------
+# API
+# Enable Home Assistant API
+# Expose all relevant functions for scripting in HA e.g. in automations
+#-------------------------------------------
+api:
+  actions:
+  - action: sleep_for
+    variables:
+      min: int
+    then:
+      - lambda: |-
+          ESP_LOGI("${TAG}", "Sleep for %d min", min);
+          id(onboard_led).turn_off(); // Turn off the LED before deep sleep
+
+          id(deep_sleep_id).set_sleep_duration(min*60*1000); // parameter is in min, needs to be converted to ms
+          id(deep_sleep_id).begin_sleep();
+
+  - action: sleep_until
+    variables:
+      target_minute: int
+      target_hour: int
+    then:
+      - lambda: |-
+          if (target_minute>=0 && target_minute<60) {
+            if (target_hour>=0 && target_hour<24) {
+
+              time_t current_time_t = id(esptime).timestamp_now();
+              struct tm *timeinfo = localtime(&current_time_t);
+              timeinfo->tm_hour = (unsigned int)target_hour;
+              timeinfo->tm_min = target_minute;
+              timeinfo->tm_sec = 0;
+              time_t sleep_until_time_t = mktime(timeinfo);
+
+              if (sleep_until_time_t <= current_time_t) {
+                // Falls die Zielzeit an dem Tag bereits vergangen ist, einen Tag hinzufügen
+                sleep_until_time_t += 24 * 60 * 60;
+              }
+
+              int difference = (int)difftime(sleep_until_time_t, current_time_t); // Unterschied in Sekunden
+
+              ESP_LOGW("${TAG}", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", target_hour, target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
+              id(onboard_led).turn_off(); // Turn off the LED before deep sleep
+              id(deep_sleep_id).set_sleep_duration(difference*1000); 
+              id(deep_sleep_id).begin_sleep();
+
+            } else {
+              ESP_LOGW("${TAG}", "hour need to be a value between 0-23");
+            }
+          } else {
+            ESP_LOGW("${TAG}", "min need to be a value between 0-60");
+          }
+
+
