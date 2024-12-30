@@ -120,37 +120,37 @@ The following automation can serve as an example.
 Source code for these scripts is under `./ha_scripts`
 
 ```yaml
-  alias: Create AI image
-  description: Create an fresh AI image every day at 6:00 on the picture frame with deep sleep support
-  triggers:
-  - trigger: homeassistant
-    event: start
+alias: Create AI image
+description: Create an fresh AI image every day at 6:00 on the picture frame with deep sleep support
+triggers:
+- trigger: homeassistant
+  event: start
+- trigger: state
+  entity_id:
+  - binary_sensor.epaper_display_status
+  to: 'on'
+conditions: []
+actions:
+- action: remote_command_line.generate_ai_image
+  data: {}
+  enabled: true
+- wait_for_trigger:
   - trigger: state
     entity_id:
-    - binary_sensor.epaper_display_status
-    to: 'on'
-  conditions: []
-  actions:
-  - action: remote_command_line.generate_ai_image
-    data: {}
-    enabled: true
-  - wait_for_trigger:
-    - trigger: state
-      entity_id:
-      - event.epaper_display_rendering
-      to: render_complete
-      attribute: event_type
-    continue_on_timeout: true
-    timeout:
-      hours: 0
-      minutes: 3
-      seconds: 0
-      milliseconds: 0
-  - action: esphome.epaper_display_sleep_until
-    metadata: {}
-    data:
-      target_minute: 0
-      target_hour: 6
+    - event.epaper_display_rendering
+    to: render_complete
+    attribute: event_type
+  continue_on_timeout: true
+  timeout:
+    hours: 0
+    minutes: 3
+    seconds: 0
+    milliseconds: 0
+- action: esphome.epaper_display_sleep_until
+  metadata: {}
+  data:
+    target_minute: 0
+    target_hour: 6
 mode: single
 ```
 
