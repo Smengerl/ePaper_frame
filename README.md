@@ -13,11 +13,11 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 # Index
 - [Mechanics](#Mechanics)
 - [Electronics](#Electronics)
-- [Usage: ESP home integration](#esp_home_integration)
-- [Usage: home assistant automation](#home_assistant_automation)
-- [Usage: AI generated image](#ai_image_generator_script)
-- [Usage: Lorem picsum random picture](#lorem_picsum_picture)
-- [Usage: Wallhaven picture of the day](#wallhaven_picture_of_the_day)
+- [Usage: ESP home integration](#esp-home-integration)
+- [Usage: home assistant automation](#home-assistant-automation)
+- [Usage: AI generated image](#ai-image-generator-script)
+- [Usage: Lorem picsum random picture](#lorem-picsum-picture)
+- [Usage: Wallhaven picture of the day](#wallhaven-picture-of-the-day)
 - [Acknowledgements](#Acknowledgements)
 
 
