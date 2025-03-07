@@ -10,6 +10,16 @@ A 3D printed picture frame that shows unique pictures every day, built with ESP3
 
 <img src="./print/photos/example_usage.jpg" alt="example_usage"/>
 
+# Index
+- [Mechanics](#Mechanics)
+- [Electronics](#Electronics)
+- [Usage: ESP home integration](#esp_home_integration)
+- [Usage: home assistant automation](#home_assistant_automation)
+- [Usage: AI generated image](#ai_image_generator_script)
+- [Usage: Lorem picsum random picture](#lorem_picsum_picture)
+- [Usage: Wallhaven picture of the day](#wallhaven_picture_of_the_day)
+- [Acknowledgements](#Acknowledgements)
+
 
 ## Mechanics
 
@@ -74,9 +84,9 @@ If you use the out-of-the-box solution from waveshare mentioned above, this is a
 If you are using the preassembled component mentioned above, there is no need for any further wiring. Just connect the flat wire of the display to the hat and you are good to go. For further details see waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
 
 
-# Example usage: ePaper Display with ESP home
+## Usage
 
-This example uses the epaper picture frame to retrieve a different picture every day or on certain triggers via home assistant. 
+The following examples uses the epaper picture in conjunction with ESP home showing a different picture every day or on certain triggers via home assistant. 
 
 The approach is based on integerating the ePaper frame as a device in ESPhome.
 An automation and helper scripts are used in homeassistant to generate suitable images on a certain time interval or other triggers.
@@ -84,7 +94,7 @@ In the meanwhile the ESP is set to deep sleep mode to preserve energy.
 
 
 
-## ESP home integration
+### ESP home integration
 
 This ESPHome project configures an ePaper display as a smart and energy-efficient solution for displaying dynamic content, such as images fetched from Home Assistant. It leverages deep sleep capabilities to optimize power usage and supports features like manual refresh, automatic updates, and offline fallback modes.
 
@@ -105,7 +115,7 @@ Source code is under `./esphome_src`
 - `/shared_packages/deep_sleep.yaml`: Contains all deep sleep related code (optional), generic - not limited to use in this project
 - `/images/offline.png`: Fallback image
 
-## home assistant automation
+### home assistant automation
 
 You can use the ePaper ESP home device in automations in home assistant.
 
@@ -152,9 +162,9 @@ actions:
 mode: single
 ```
 
-## Example Scripts
+### Example Scripts
 
-### Notes on usage
+#### Notes on usage
 
 - Make sure to have the scripts set to executable via chmod
 - Adapt the parameters in the script as needed
@@ -162,7 +172,7 @@ mode: single
 - Double check if your HA has ffmpeg installed. For this, you need to execute the command in the HA docker container, use `docker container exec homeassistant ls /usr/bin | less. Note that you need to disable protection mode in terminal to run this command. Also you might want to configure ffmpeg for homeassistant as well by adding a configuration entry in your configuration.yaml. See ffmpeg integration description.
 
 
-### AI image generator script
+#### AI image generator script
 
 `ha_scripts/generate_new_image.sh`: Image Generation from Hugging Face API
 
@@ -174,7 +184,7 @@ It integrates with the Hugging Face API (FLUX.1-dev) to generate images based on
 - Captures detailed curl logs to trace the API call for debugging purposes
 
 
-### Lorem Picsum picture
+#### Lorem Picsum picture
 
 `ha_scripts/get_lorem_picsum.sh`: Get random picture from Lorem Picsum API
 
@@ -185,7 +195,7 @@ This script automates the process of downloading a random grayscale image from L
 - Backup Management: Creates a timestamped backup of both the original .jpg and processed .png images.
 
 
-### Wallhaven picture of the day
+#### Wallhaven picture of the day
 
 `ha_scripts/get_wallhaven_potd.sh`: Get picture of the day from wallhaven API
 
@@ -195,3 +205,8 @@ This script fetches a random image from the Wallhaven API, processes it to meet 
 - Image Processing: Dynamically calculates cropping dimensions to preserve the largest possible portion of the image while maintaining the target aspect ratio. Converts the cropped image to .png format using ffmpeg.
 - Backup Management: Automatically creates a timestamped backup of both the original and processed images.
 
+
+## Acknowledgements
+home assistant
+ESP home
+hugging face
