@@ -40,7 +40,7 @@ Renderings / Prototype:
 | Screw     | M2 6mm  | 4        |
 | Screw     | M2 10mm | 14       |
 
-## Assembly
+### Assembly
 
 ![assembly](./print/rendering/assembly.gif)
 
@@ -53,14 +53,14 @@ Also you can mount the ESP box facing the cable holder in the other direction th
 
 ### Part list
 
-| Name                       | Thumbnail                                                                | Required          | Note      |
-| -------------------------- | ------------------------------------------------------------------------ | ----------------- | --------- |
-| ESP32 Dev Module | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/> | 1 | Easiest way is to use pre-assembled display boards such as [this one](https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board) |
-| 7,5" ePaper Display HAT | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/> | 1 | There a dozens of different epaper displays available which require different configuration. I used [this one](https://www.waveshare.com/7.5inch-e-Paper-B.htm) |
+| Unit price | Quantity | Partname | Thumbnail | Note |
+| ---------- | -------- | -------- | --------- | ---- |
+| 5-10 USD | 1 | ESP32 Dev Module | <img src="https://www.waveshare.com/w/upload/7/77/E-Paper-ESP32-Driver-Board-01.jpg" alt="esp32" width="300"/> | Easiest way is to use pre-assembled display boards such as [this one](https://www.waveshare.com/wiki/E-Paper_ESP32_Driver_Board) |
+| 50 USD | 1 | 7,5" ePaper Display HAT | <img src="https://www.waveshare.com/w/upload/thumb/d/d9/7.5inch-e-paper-hat-b-4.jpg/450px-7.5inch-e-paper-hat-b-4.jpg" alt="ePaper" width="300"/> | There a dozens of different epaper displays available which require different configuration. I used [this one](https://www.waveshare.com/7.5inch-e-Paper-B.htm) |
 
 *Please note that this hat has no PSRAM as most other ESP32 development boards and is therefore limited in terms of use for memory intesive graphic operations (downloading images from the web, decoding images at runtime etc) 
 
-### ESP pinout to ePaper
+### Schematics
 
 If you use the out-of-the-box solution from waveshare mentioned above, this is a working configuration and pinout for the display:
 - Display model 50inV2alt
@@ -70,8 +70,6 @@ If you use the out-of-the-box solution from waveshare mentioned above, this is a
 - DC: GPIO27
 - RESET: GPIO26 (Reset duration 2ms)
 - BUSY: GPIO25 (Inverted!)
-
-### Connection Diagram
 
 If you are using the preassembled component mentioned above, there is no need for any further wiring. Just connect the flat wire of the display to the hat and you are good to go. For further details see waveshare's wiki: https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT_(B)_Manual#ESP32.2F8266
 
