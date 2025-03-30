@@ -207,6 +207,6 @@ This script fetches a random image from the Wallhaven API, processes it to meet 
 
 
 ## Acknowledgements
-home assistant
-ESP home
-hugging face
+- home assistant 
+- ESP home
+- hugging face
