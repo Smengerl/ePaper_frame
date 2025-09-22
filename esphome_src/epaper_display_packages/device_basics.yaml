@@ -166,6 +166,7 @@ wifi:
 # to provision wifi credentials to the device via WiFi AP.
 captive_portal:
 
+# Displays a notification in case the device need to be updated
 dashboard_import:
   package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
   import_full_config: true

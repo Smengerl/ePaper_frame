@@ -20,8 +20,8 @@ esphome:
   #min_version: 2024.6.0
   name_add_mac_suffix: false
   project:
-    name: esphome.web
-    version: dev
+    name: epaper_display.esphome
+    version: '1.0'
   on_boot:
     priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
     then:
