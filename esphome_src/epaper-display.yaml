@@ -2,8 +2,15 @@ substitutions:
   name: "epaper-display"
   friendly_name: "ePaper Display"
   comment: "ePaper Display in picture frame"
+  project_name: epaper_display.esphome
 
   TAG: "epaper-display.yaml"
+
+
+  api_key: "Tl2rJtTss0xoQ792MStUvP3Lopg0qZX50jRWxrQ8y3E"
+  ota_pw: "c94846b481b42dc19071f84f059318cb"
+  fallback_hotspot_ssid: "EPaper Fallback Hotspot"
+  fallback_hotspot_pw: "lNsuXkde0t4d"
 
 
   initial_image_url: http://homeassistant.local:8123/local/output.png
@@ -20,7 +27,7 @@ esphome:
   #min_version: 2024.6.0
   name_add_mac_suffix: false
   project:
-    name: epaper_display.esphome
+    name: ${project_name} 
     version: '1.0'
   on_boot:
     priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
@@ -217,7 +224,7 @@ api:
 
 
   encryption:
-    key: "Tl2rJtTss0xoQ792MStUvP3Lopg0qZX50jRWxrQ8y3E="
+    key: ${api_key}
 
   actions:
   - action: epaper_reload_image

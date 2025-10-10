@@ -134,33 +134,30 @@ esp32:
 
 
 
-
-# Enable debug logging
+# Enable logging
 logger:
-  level: debug
 
+# Enable Home Assistant API
+#api:
+#  encryption:
+#    key: ${api_key}
 
-
-
-
-
-# Allow Over-The-Air updates
 ota:
-- platform: esphome
+  platform: esphome
+  password: ${ota_pw}
 
 # Allow provisioning Wi-Fi via serial
 improv_serial:
 
 wifi:
-  # Set up a wifi access point
-  id: wifi_id
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "epaper-display"
-    password: "sdara35gBL5Fu"
+    ssid: ${fallback_hotspot_ssid} 
+    password: ${fallback_hotspot_pw} 
+
 
 # In combination with the `ap` this allows the user
 # to provision wifi credentials to the device via WiFi AP.
