@@ -7,7 +7,7 @@ substitutions:
   TAG: "epaper-display.yaml"
 
 
-  api_key: "Tl2rJtTss0xoQ792MStUvP3Lopg0qZX50jRWxrQ8y3E"
+  api_key: "Ro8sJfHgXe5uTqCvMb4aKzErLyUQm7xZp9vLk2tWnYc="
   ota_pw: "c94846b481b42dc19071f84f059318cb"
   fallback_hotspot_ssid: "EPaper Fallback Hotspot"
   fallback_hotspot_pw: "lNsuXkde0t4d"
