@@ -150,6 +150,7 @@ ota:
 improv_serial:
 
 wifi:
+  id: wifi_id
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
