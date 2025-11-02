@@ -7,7 +7,7 @@ source standard_config.sh
 source hugging_face_bearer_token.sh
 
 # URL for the API
-MODEL_URL="https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev" 
+MODEL_URL="https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-dev" 
 
 
 
