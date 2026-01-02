@@ -1,5 +1,9 @@
 # ePaper frame for ESP32
 
+[![3D Printing](https://img.shields.io/badge/3D_printing-STL-green)](#)
+[![ESPhome](https://img.shields.io/badge/homeassistant-ESPhome-green)](#)
+[![License](https://img.shields.io/badge/license-Beerware-green)](#)
+
 A 3D printed picture frame that shows unique pictures every day, built with ESP32/ESPhome:
 
 - A robust 3D printed structure fitting into a regular IKEA picture frame
