@@ -220,7 +220,8 @@ This script fetches a random image from the Wallhaven API, processes it to meet 
 
 ## Development
 
-Contributions are welcome — see `CONTRIBUTING.md` for details.
+Contributions are welcome.  
+See `CONTRIBUTING.md` for details and follow the `CODE_OF_CONDUCT.md` when contributing.
 
 ## License
 
