@@ -40,12 +40,20 @@ Renderings / Prototype:
 
 | Filename       | Thumbnail                                                                       | Required |
 | -------------- | ------------------------------------------------------------------------------- | -------- |
-| frame             | <img src="./print/rendering/frame.png" alt="frame"/>                         | 1        |
+| frame_lower_clips, frame_higher_clips | <img src="./print/rendering/frame.png" alt="frame"/>                         | 1        |
 | display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate"/> | 1        |
 | esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box"/>                     | 1        |
 | display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box"/> | 1        |
 | short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid"/>               | optional, required for wall hanging in portrait mode |
 | long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid"/>                 | option, required for wall hanging in landscape mode |
+
+
+> **Note on IKEA picture frames:**  
+> IKEA has changed the position of the wire clips on the back of their picture frames in newer batches ([see Issue #1](https://github.com/Smengerl/ePaper_frame/issues/1)).  
+> Please check the position of the wire clips on your frame before printing.  
+> Depending on the position, you should print either the `frame_lower_clips` **or** `frame_higher_clips` version.
+
+
 
 ### Required screws
 
