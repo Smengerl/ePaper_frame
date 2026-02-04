@@ -40,7 +40,8 @@ Renderings / Prototype:
 
 | Filename       | Thumbnail                                                                       | Required |
 | -------------- | ------------------------------------------------------------------------------- | -------- |
-| frame_lower_clips, frame_higher_clips | <img src="./print/png/frame.png" alt="frame"/>                         | 1        |
+| frame_lower_clips | <img src="./print/png/frame_lower_clips.png" alt="frame"/>                         | 1 (for frames with lower clips)        |
+| frame_higher_clips | <img src="./print/png/frame_higher_clips.png" alt="frame"/>                         | 1 (for frames with higher clips)      |
 | display_backplate | <img src="./print/png/display_backplate.png" alt="display_backplate"/> | 1        |
 | esp_box           | <img src="./print/png/esp_box.png" alt="esp_box"/>                     | 1        |
 | display_cable_box | <img src="./print/png/display_cable_box.png" alt="display_cable_box"/> | 1        |
