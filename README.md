@@ -6,7 +6,7 @@
 
 A 3D printed picture frame that shows unique pictures every day, built with ESP32/ESPhome:
 
-- A robust 3D printed structure fitting into a regular IKEA picture frame
+- A robust 3D printed structure fitting into a regular 13x18cm IKEA picture frame (e.g. RÖDALM)
 - can be used in portrait and landscape mode
 - home assistant integration for flexible usage
 - Example code (e.g. AI image generator)
@@ -32,7 +32,7 @@ A 3D Printed picture frame for ESP32 to be used e.g. with ESPhome for home assis
 Renderings / Prototype:
 | Front                                                | Back                                                 | Isometric |
 | ---------------------------------------------------- | ---------------------------------------------------- | --------- |
-| <img src="./print/rendering/front.png" alt="front"/> | <img src="./print/rendering/back.png" alt="back"/>   | <img src="./print/rendering/iso.png" alt="iso"/> |
+| <img src="./print/front.png" alt="front"/> | <img src="./print/back.png" alt="back"/>   | <img src="./print/iso.png" alt="iso"/> |
 | <img src="./print/photos/front.jpg" alt="front"/>    | <img src="./print/photos/back.jpg" alt="back"/>      | <img src="./print/photos/iso.jpg" alt="iso"/> |
 
 
@@ -40,12 +40,12 @@ Renderings / Prototype:
 
 | Filename       | Thumbnail                                                                       | Required |
 | -------------- | ------------------------------------------------------------------------------- | -------- |
-| frame_lower_clips, frame_higher_clips | <img src="./print/rendering/frame.png" alt="frame"/>                         | 1        |
-| display_backplate | <img src="./print/rendering/display_backplate.png" alt="display_backplate"/> | 1        |
-| esp_box           | <img src="./print/rendering/esp_box.png" alt="esp_box"/>                     | 1        |
-| display_cable_box | <img src="./print/rendering/display_cable_box.png" alt="display_cable_box"/> | 1        |
-| short_grid        | <img src="./print/rendering/short_grid.png" alt="short_grid"/>               | optional, required for wall hanging in portrait mode |
-| long_grid         | <img src="./print/rendering/long_grid.png" alt="long_grid"/>                 | option, required for wall hanging in landscape mode |
+| frame_lower_clips, frame_higher_clips | <img src="./print/png/frame.png" alt="frame"/>                         | 1        |
+| display_backplate | <img src="./print/png/display_backplate.png" alt="display_backplate"/> | 1        |
+| esp_box           | <img src="./print/png/esp_box.png" alt="esp_box"/>                     | 1        |
+| display_cable_box | <img src="./print/png/display_cable_box.png" alt="display_cable_box"/> | 1        |
+| short_grid        | <img src="./print/png/short_grid.png" alt="short_grid"/>               | optional, required for wall hanging in portrait mode |
+| long_grid         | <img src="./print/png/long_grid.png" alt="long_grid"/>                 | option, required for wall hanging in landscape mode |
 
 
 > **Note on IKEA picture frames:**  
@@ -64,7 +64,7 @@ Renderings / Prototype:
 
 ### Assembly
 
-![assembly](./print/rendering/assembly.gif)
+![assembly](./print/assembly.gif)
 
 Note that you can insert the ESP in its mount facing upside down in case you want to access the GPIO pins that would otherwise be on the backside.
 Also you can mount the ESP box facing the cable holder in the other direction than shown in the assembly video if this allows you for better mounting of the cable in you home.  
