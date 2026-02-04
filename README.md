@@ -232,6 +232,8 @@ This script fetches a random image from the Wallhaven API, processes it to meet 
 Contributions are welcome.  
 See `CONTRIBUTING.md` for details and follow the `CODE_OF_CONDUCT.md` when contributing.
 
+All .stl, .png, and assembly pictures are automatically exported via my Fusion add-in, see [here](https://github.com/smengerl/fusion-exporter)
+
 ## License
 
 This project is licensed under the Beerware License — see `LICENSE.txt` for details.
