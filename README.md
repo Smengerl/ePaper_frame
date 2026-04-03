@@ -6,6 +6,15 @@
 
 A 3D printed picture frame that shows unique pictures every day, built with ESP32/ESPhome:
 
+## Table of Contents
+- [Mechanics](#mechanics)
+- [Electronics](#electronics)
+- [Usage](#usage)
+- [Acknowledgements](#acknowledgements)
+- [Development](#development)
+- [License](#license)
+- [Authors](#authors)
+
 - A robust 3D printed structure fitting into a regular 13x18cm IKEA picture frame (e.g. RÖDALM)
 - can be used in portrait and landscape mode
 - home assistant integration for flexible usage
@@ -190,11 +199,19 @@ mode: single
 `ha_scripts/generate_new_image.sh`: Image Generation from Hugging Face API
 
 This script uses a text-to-image AI to create an image for a given prompt to display this on the ePaper displays. 
-It integrates with the Hugging Face API (FLUX.1-dev) to generate images based on a specified prompt, processes the resulting image, and organizes backups for future use.
-- Sends a prompt to the Hugging Face model API (FLUX.1-dev) to generate an image to display on the epaper screen a high-resolution .jpg image of the specified dimensions.
+It integrates with the Hugging Face Inference API (FLUX.1-schnell) to generate images based on a specified prompt, processes the resulting image, and organizes backups for future use.
+- Sends a prompt to the Hugging Face model API (FLUX.1-schnell) to generate an image to display on the epaper screen a high-resolution .jpg image of the specified dimensions.
 - Converts the generated .jpg image to a .png format using ffmpeg.
 - Automatically creates a timestamped backup of the processed image in a designated backup directory.
 - Captures detailed curl logs to trace the API call for debugging purposes
+
+> **Note on Hugging Face free tier:**  
+> The script uses the `hf-inference` provider via `https://router.huggingface.co/hf-inference/models/...`, which is HF's own native serverless backend and works with the free monthly credits included in every HF account ($0.10/month for free users, $2.00/month for PRO users).  
+> Other providers such as `fal-ai` require separate pre-paid credits and will not work on the free tier.  
+> As of April 2026, only **3 text-to-image models** are available on `hf-inference`:
+> - `black-forest-labs/FLUX.1-schnell` — best quality, currently used
+> - `stabilityai/stable-diffusion-xl-base-1.0`
+> - `stabilityai/stable-diffusion-3-medium-diffusers`
 
 
 #### Lorem Picsum picture

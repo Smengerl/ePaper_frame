@@ -7,7 +7,13 @@ source standard_config.sh
 source hugging_face_bearer_token.sh
 
 # URL for the API
-MODEL_URL="https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-dev" 
+# Using hf-inference provider (native HF serverless, free tier) with FLUX.1-schnell.
+# fal-ai requires pre-paid credits. hf-inference uses HF's own free monthly credits ($0.10/month for free users).
+# Note: Only 3 text-to-image models are available on hf-inference free tier (as of April 2026):
+#   - black-forest-labs/FLUX.1-schnell        (best quality)
+#   - stabilityai/stable-diffusion-xl-base-1.0
+#   - stabilityai/stable-diffusion-3-medium-diffusers
+MODEL_URL="https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
 
 
 
