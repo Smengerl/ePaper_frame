@@ -1,0 +1,1 @@
+ePaper Frame for ESPhome / home assistant based on ESP32
