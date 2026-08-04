@@ -49,7 +49,7 @@ fi
 process_image_with_ffmpeg 
 
 # Backup result
-backup_file 
+backup_file
 
 
 
