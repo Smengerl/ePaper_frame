@@ -1,7 +1,14 @@
+#-------------------------------------------
+# Debug and Diagnostics
+# Provides system health monitoring sensors
+#-------------------------------------------
+
+# Update debug information every 60 seconds
 debug:
   update_interval: 60s
 
 sensor:
+  # Memory usage sensors to monitor heap allocation
   - platform: debug
     free:
       name: "Heap Free"
@@ -13,6 +20,7 @@ sensor:
 #      name: "PSRAM"
 #      entity_category: diagnostic
 
+  # WiFi signal strength in dBm (internal use only)
   - platform: wifi_signal
     name: "WiFi Signal"
     id: wifi_signal_db
@@ -20,7 +28,9 @@ sensor:
     entity_category: diagnostic
     internal: true
 
-  - platform: copy # Reports the WiFi signal strength in %
+  # WiFi signal strength converted to percentage (0-100%)
+  # Formula converts dBm to percentage: 2 * (dBm + 100)
+  - platform: copy
     source_id: wifi_signal_db
     name: "WiFi Strength"
     filters:
@@ -29,17 +39,21 @@ sensor:
     entity_category: diagnostic
 
 
+#-------------------------------------------
+# Connection Status
+#-------------------------------------------
 
-
-
-
-# Generic API status sensor "connected / disconnected"
+# Binary sensor showing API connection state (connected/disconnected)
 binary_sensor:
   - platform: status
-    name: "Status"
+    id: connection_state
+    name: "Connection state"
 
+#-------------------------------------------
+# Network Information
+#-------------------------------------------
 
-
+# Text sensors providing WiFi connection details
 text_sensor:
   - platform: wifi_info
     ip_address:
@@ -52,8 +66,11 @@ text_sensor:
       name: "Mac Address"
       entity_category: diagnostic
 
+#-------------------------------------------
+# System Control Buttons
+#-------------------------------------------
 
-
+# Buttons to shutdown or restart the device
 button:
   - platform: shutdown
     entity_category: diagnostic

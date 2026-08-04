@@ -1,31 +1,39 @@
+#-------------------------------------------
+# ePaper Display Configuration
+# Hardware settings for Waveshare 7.5" ePaper display
+#-------------------------------------------
+
 substitutions:
 
 #-------------------------------------------
-# Physical dimensions in frame
-# should match dimensions in script (AI requires width/height to be divisible by 8)
+# Physical Display Dimensions
+# Visible area within the physical frame
+# NOTE: Width and height should be divisible by 8 for AI image generation
 #-------------------------------------------
-  display_min_pixel_x: '0'     # Left most visible pixel
-  display_pixel_width: '480'   # Right most visible pixel
-  display_min_pixel_y: '30'     # top most visible pixel
-  display_pixel_height: '744'   # bottom most visible pixel -- 
-  display_rotation: '90°'
+  display_min_pixel_x: '0'       # Left edge of visible area
+  display_pixel_width: '480'     # Width of visible area
+  display_min_pixel_y: '30'      # Top edge of visible area (30px offset from top)
+  display_pixel_height: '744'    # Height of visible area
+  display_rotation: '90°'        # Rotate display 90 degrees
 
 
 
 
 #-------------------------------------------
-# Pinning
+# GPIO Pin Configuration
+# ESP32 pin assignments for ePaper display communication
 #-------------------------------------------
 
-  gpio_spi_clk_pin: GPIO13
-  gpio_spi_mosi_pin: GPIO14
+  gpio_spi_clk_pin: GPIO13       # SPI clock signal
+  gpio_spi_mosi_pin: GPIO14      # SPI MOSI (data out)
   
-  gpio_cs_pin: GPIO15
-  gpio_dc_pin: GPIO27
-  gpio_reset_pin: GPIO26
-  gpio_busy_pin: GPIO25
+  gpio_cs_pin: GPIO15            # Chip select
+  gpio_dc_pin: GPIO27            # Data/Command control
+  gpio_reset_pin: GPIO26         # Display reset
+  gpio_busy_pin: GPIO25          # Display busy signal
   
-  # WARNING: The BUSY pin on the gdew0154m09 and Waveshare 7.50in V2 models must be inverted to prevent permanent display damage. 
+  # IMPORTANT: The BUSY pin on gdew0154m09 and Waveshare 7.50in V2 must be inverted
+  # to prevent permanent display damage
   gpio_busy_pin_inverted: 'true' 
 
 
@@ -98,7 +106,10 @@ substitutions:
 
 
 
-## Support for red in display not yet in main branch
+#-------------------------------------------
+# External Components (Optional)
+#-------------------------------------------
+# Red/Black/White display support not yet in main ESPHome branch
 # See: https://github.com/esphome/feature-requests/issues/239
 #external_components:
 #  - source:
@@ -106,7 +117,8 @@ substitutions:
 #      url: https://github.com/twisterss/esphome-dev.git
 #      ref: waveshare-red-black
 #    components: [ waveshare_epaper ]
-# NOT WORKING: Currently does not have support for manual refresh via component.update on display as function is declared private!
+# NOTE: This component currently does not support manual refresh via component.update
+# (function is declared private)
 
 
 
@@ -115,72 +127,93 @@ substitutions:
 
 
 
+
+#-------------------------------------------
+# ESP32 Configuration
+#-------------------------------------------
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
 
 
-# Option to enable PSRAM, see https://esphome.io/components/psram.html
-# Only available on ESP32, not availbe on waveshare's display hat
-# Required for online image component
+#-------------------------------------------
+# PSRAM Configuration (Optional)
+#-------------------------------------------
+# PSRAM support for larger image buffers
+# Only available on ESP32, not on Waveshare's display HAT
+# Required for online image component with large images
+# See: https://esphome.io/components/psram.html
 #psram:
 #  mode: octal
 #  speed: 80MHz
 
 
+#-------------------------------------------
+# System Configuration
+#-------------------------------------------
 
-
-
-
-
-# Enable logging
+# Enable logging for debugging
 logger:
 
-# Enable Home Assistant API
+# Home Assistant API (encryption key defined in main config)
 #api:
 #  encryption:
 #    key: ${api_key}
 
+# Enable Over-The-Air updates
 ota:
   platform: esphome
   password: ${ota_pw}
 
-# Allow provisioning Wi-Fi via serial
+# Allow WiFi provisioning via serial port
 improv_serial:
 
+
+#-------------------------------------------
+# WiFi Configuration
+#-------------------------------------------
 wifi:
   id: wifi_id
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  # Enable fallback hotspot in case WiFi connection fails
+  # Creates an access point for manual WiFi configuration
   ap:
     ssid: ${fallback_hotspot_ssid} 
     password: ${fallback_hotspot_pw} 
+    
 
+#-------------------------------------------
+# Network Provisioning
+#-------------------------------------------
 
-# In combination with the `ap` this allows the user
-# to provision wifi credentials to the device via WiFi AP.
+# Captive portal for WiFi credential configuration via AP mode
 captive_portal:
 
-# Displays a notification in case the device need to be updated
+# Dashboard import for easy device updates
 dashboard_import:
   package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
   import_full_config: true
 
-# Sets up Bluetooth LE (Only on ESP32) to allow the user
-# to provision wifi credentials to the device.
+#-------------------------------------------
+# Bluetooth Provisioning (Optional)
+#-------------------------------------------
+# Allows WiFi credential setup via Bluetooth Low Energy
 #esp32_improv:
 #  authorizer: none
 
-# To have a "next url" for improv serial
+# Web server for device management (Optional)
 #web_server:
 #  port: 80
 #  version: 3
 
 
-# Pins for Waveshare ePaper ESP Board
+#-------------------------------------------
+# SPI Bus Configuration
+# Used for communication with ePaper display
+#-------------------------------------------
 spi:
   clk_pin: $gpio_spi_clk_pin
   mosi_pin: $gpio_spi_mosi_pin

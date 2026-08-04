@@ -1,12 +1,18 @@
+#-------------------------------------------
+# Deep Sleep Management
+# Enables power-saving mode and wakeup tracking
+#-------------------------------------------
+
 sensor:
-# Sensor to provide the wakeup cause (e.g. when using deep sleep)
+# Sensor to track why the device woke up from deep sleep
+# Values correspond to ESP32 wakeup causes (timer, touchpad, GPIO, etc.)
   - platform: template
     name: "Wakeup Cause"
     id: boot_wakeup_cause
     update_interval: never
     accuracy_decimals: 0
 
-# Sensor to store the time of the wakeup
+# Timestamp of the last device boot/wakeup
   - platform: template
     name: "Last boot"
     id: boot_timestamp
@@ -16,22 +22,30 @@ sensor:
 
 esphome:
   on_boot:
-    priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
+    # Execute this after all other boot tasks are complete
+    priority: -100
     then:
       - lambda: |-
           id(boot_timestamp).publish_state(id(esptime).now().timestamp); //.strftime("%Y-%m-%dT%H:%M:%S"));
           auto wakeup_cause = esp_sleep_get_wakeup_cause();
           id(boot_wakeup_cause).publish_state(wakeup_cause);
 
-
+#-------------------------------------------
+# Time Synchronization
+# Required for sleep scheduling and timestamps
+#-------------------------------------------
 time:
   - platform: homeassistant
     id: esptime
 
+#-------------------------------------------
+# Deep Sleep Configuration
+#-------------------------------------------
 deep_sleep:
   id: deep_sleep_id
 
-  # Manual wakeup on "boot" button (pressed = low)
+  # Allow manual wakeup using the boot button (GPIO0)
+  # Button press (low signal) will wake the device
   wakeup_pin:
     number: GPIO0
     inverted: true
@@ -39,23 +53,25 @@ deep_sleep:
     ignore_strapping_warning: true
 
 #-------------------------------------------
-# API
-# Enable Home Assistant API
-# Expose all relevant functions for scripting in HA e.g. in automations
+# API Actions for Sleep Control
+# Expose sleep functions for Home Assistant automations
 #-------------------------------------------
 api:
   actions:
+  # Action to put device to sleep for a specified number of minutes
   - action: sleep_for
     variables:
       min: int
     then:
       - lambda: |-
-          ESP_LOGI("${TAG}", "Sleep for %d min", min);
+          ESP_LOGI("${TAG}", "Sleep for %d min", (int) min);
           id(onboard_led).turn_off(); // Turn off the LED before deep sleep
 
           id(deep_sleep_id).set_sleep_duration(min*60*1000); // parameter is in min, needs to be converted to ms
           id(deep_sleep_id).begin_sleep();
 
+  # Action to schedule wakeup at a specific time (HH:MM)
+  # If target time has passed today, will wake tomorrow at that time
   - action: sleep_until
     variables:
       target_minute: int
@@ -73,13 +89,13 @@ api:
               time_t sleep_until_time_t = mktime(timeinfo);
 
               if (sleep_until_time_t <= current_time_t) {
-                // Falls die Zielzeit an dem Tag bereits vergangen ist, einen Tag hinzufügen
+                // If target time has already passed today, add one day
                 sleep_until_time_t += 24 * 60 * 60;
               }
 
-              int difference = (int)difftime(sleep_until_time_t, current_time_t); // Unterschied in Sekunden
+              int difference = (int)difftime(sleep_until_time_t, current_time_t); // Difference in seconds
 
-              ESP_LOGW("${TAG}", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", target_hour, target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
+              ESP_LOGW("${TAG}", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", (int) target_hour, (int) target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
               id(onboard_led).turn_off(); // Turn off the LED before deep sleep
               id(deep_sleep_id).set_sleep_duration(difference*1000); 
               id(deep_sleep_id).begin_sleep();

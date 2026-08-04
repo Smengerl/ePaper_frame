@@ -6,33 +6,31 @@ substitutions:
 
   TAG: "epaper-display.yaml"
 
-
-  api_key: "Ro8sJfHgXe5uTqCvMb4aKzErLyUQm7xZp9vLk2tWnYc="
-  ota_pw: "c94846b481b42dc19071f84f059318cb"
+  api_key: !secret epaper_api_key
+  ota_pw: !secret epaper_ota_pw
   fallback_hotspot_ssid: "EPaper Fallback Hotspot"
-  fallback_hotspot_pw: "lNsuXkde0t4d"
-
+  fallback_hotspot_pw: !secret epaper_fallback_pw
 
   initial_image_url: http://homeassistant.local:8123/local/output.png
 
 packages:
   device_basics: !include epaper_display_packages/device_basics.yaml
   debug_basics: !include shared_packages/debug_basics.yaml
-  deep_sleep:  !include shared_packages/deep_sleep.yaml
+  deep_sleep: !include shared_packages/deep_sleep.yaml
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
   comment: ${comment}
-  #min_version: 2024.6.0
+  min_version: 2026.7.0
   name_add_mac_suffix: false
   project:
-    name: ${project_name} 
-    version: '1.0'
+    name: ${project_name}
+    version: "1.0"
   on_boot:
     priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
     then:
-      - light.turn_on: onboard_led  # Turn on the LED during startup
+      - light.turn_on: onboard_led # Turn on the LED during startup
 
       - wait_until: api.connected # Wait for API to be conected and then send event informing about startup reason
       - lambda: |-
@@ -43,19 +41,15 @@ esphome:
             ESP_LOGD("${TAG}", "No automatic downloading and rendering on startup");
           }
 
-
-
-
-
-
-
 # Onboard LED control
 output:
   - platform: gpio
     id: onboard_led_output
-    pin: GPIO2  # Default onboard LED pin for most ESP32 boards
+    pin:
+      number: GPIO2 # Default onboard LED pin for most ESP32 boards
+      ignore_strapping_warning: true
 
-light: 
+light:
   - platform: status_led
     name: "Onboard Status LED"
     icon: "mdi:led-on"
@@ -64,12 +58,8 @@ light:
     entity_category: diagnostic
     internal: true
 
-
-
-
 # event configuration
 event:
-
   - platform: template
     name: Rendering
     id: rendering_events
@@ -93,9 +83,6 @@ event:
     #    - lambda: |-
     #        ESP_LOGD("${TAG}", "Image downloading complete event %s triggered.", event_type.c_str());
 
-
-
-
 # Controls whether the display shall automatically download and render the image on startup
 switch:
   - platform: template
@@ -105,18 +92,9 @@ switch:
     restore_mode: RESTORE_DEFAULT_ON
     optimistic: true
 
-
-
-
-
-
 #time:
 #  - platform: homeassistant
 #    id: esptime
-
-
-
-
 
 #-------------------------------------------
 # AUTO REFRESH DISPLAY
@@ -124,7 +102,7 @@ switch:
 # Value 0 means no auto refresh
 #-------------------------------------------
 interval:
-  - interval: 1h  # Base interval for the check
+  - interval: 1h # Base interval for the check
     then:
       - lambda: |-
           if (id(auto_screen_refresh).state > 0) {
@@ -158,18 +136,12 @@ number:
               ESP_LOGI("${TAG}", "Auto screen refresh updated: %.0fh", x);
             }
 
-
 globals:
   - id: auto_refresh_counter
     type: int
     restore_value: no
-    initial_value: '0'
-#-------------------------------------------
-
-
-
-
-
+    initial_value: "0"
+  #-------------------------------------------
 
   - id: home_assistant_local_ip
     type: std::string
@@ -201,14 +173,12 @@ text:
     optimistic: true
     restore_value: yes
     initial_value: $initial_image_url
-    on_value: 
+    on_value:
       then:
         - online_image.set_url:
             url: !lambda |-
               return id(image_url).state.c_str();
             id: online_image_id
-
-
 
 #-------------------------------------------
 # API
@@ -218,128 +188,67 @@ text:
 api:
   on_client_connected:
     lambda: |-
-      ESP_LOGW("${TAG}", "Client %s connected to API with IP %s", client_info.c_str(), client_address.c_str());
+      ESP_LOGW("${TAG}", "HA connected from IP %s", client_address.c_str());
       id(home_assistant_local_ip) = client_address.c_str(); // Example value: 192.168.31.177
-
-
 
   encryption:
     key: ${api_key}
 
   actions:
-  - action: epaper_reload_image
-    then:
-      - lambda: |-
-          id(online_image_id).update();
+    - action: epaper_reload_image
+      then:
+        - lambda: |-
+            id(online_image_id).update();
 
-  - action: epaper_render
-    then:
-      - lambda: |-
-          id(eink_display).update();
+    - action: epaper_render
+      then:
+        - lambda: |-
+            id(eink_display).update();
 
-  - action: epaper_set_image_url
-    variables:
-      url: string
-    then:
-      - online_image.set_url:
-          url: !lambda |-
-            ESP_LOGI("${TAG}", "Set image URL: %s", url.c_str());
+    - action: epaper_set_image_url
+      variables:
+        url: string
+      then:
+        - online_image.set_url:
+            url: !lambda |-
+              ESP_LOGI("${TAG}", "Set image URL: %s", url.c_str());
 
-            auto call = id(image_url).make_call();
-            call.set_value(url.c_str());
-            call.perform();
+              auto call = id(image_url).make_call();
+              call.set_value(url.c_str());
+              call.perform();
 
-            return url.c_str();
-          id: online_image_id
+              return url.c_str();
+            id: online_image_id
 
-  - action: epaper_set_local_image_url
-    variables:
-      local_url: string
-    then:
-      - online_image.set_url:
-          url: !lambda |-
-            static char buf[200];
-            snprintf(buf, sizeof(buf), "http://%s:8123/local/%s", id(home_assistant_local_ip).c_str(), local_url.c_str());
-            ESP_LOGI("${TAG}", "Set local URL: %s --> %s", local_url.c_str(), buf);
+    - action: epaper_set_local_image_url
+      variables:
+        local_url: string
+      then:
+        - online_image.set_url:
+            url: !lambda |-
+              static char buf[200];
+              snprintf(buf, sizeof(buf), "http://%s:8123/local/%s", id(home_assistant_local_ip).c_str(), local_url.c_str());
+              ESP_LOGI("${TAG}", "Set local URL: %s --> %s", local_url.c_str(), buf);
 
-            auto call = id(image_url).make_call();
-            call.set_value(buf);
-            call.perform();
+              auto call = id(image_url).make_call();
+              call.set_value(buf);
+              call.perform();
 
-            return buf;
-          id: online_image_id
+              return buf;
+            id: online_image_id
 
-#  - action: epaper_sleep_for
-#    variables:
-#      min: int
-#    then:
-#      - lambda: |-
-#          ESP_LOGI("${TAG}", "Sleep for %d min", min);
-#          id(onboard_led).turn_off(); // Turn off the LED before deep sleep
-#
-#          id(deep_sleep_id).set_sleep_duration(min*60*1000); // parameter is in min, needs to be converted to ms
-#          id(deep_sleep_id).begin_sleep();
-#
-#  - action: epaper_sleep_until
-#    variables:
-#      target_minute: int
-#      target_hour: int
-#    then:
-#      - lambda: |-
-#          if (target_minute>=0 && target_minute<60) {
-#            if (target_hour>=0 && target_hour<24) {
-#
-#              time_t current_time_t = id(esptime).timestamp_now();
-#              struct tm *timeinfo = localtime(&current_time_t);
-#              timeinfo->tm_hour = (unsigned int)target_hour;
-#              timeinfo->tm_min = target_minute;
-#              timeinfo->tm_sec = 0;
-#              time_t sleep_until_time_t = mktime(timeinfo);
-#
-#              if (sleep_until_time_t <= current_time_t) {
-#                // Falls die Zielzeit an dem Tag bereits vergangen ist, einen Tag hinzufügen
-#                sleep_until_time_t += 24 * 60 * 60;
-#              }
-#
-#              int difference = (int)difftime(sleep_until_time_t, current_time_t); // Unterschied in Sekunden
-#
-#              ESP_LOGW("${TAG}", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", target_hour, target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
-#              id(onboard_led).turn_off(); // Turn off the LED before deep sleep
-#              id(deep_sleep_id).set_sleep_duration(difference*1000); 
-#              id(deep_sleep_id).begin_sleep();
-#
-#            } else {
-#              ESP_LOGW("${TAG}", "hour need to be a value between 0-23");
-#            }
-#          } else {
-#            ESP_LOGW("${TAG}", "min need to be a value between 0-60");
-#          }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# NOTE: migrated image: and online_image: to the new image: platform format
+# (platform: file / platform: online_image)
 image:
-  - file: "images/offline.png"
+  - platform: file
+    file: "images/offline.png"
     id: offline_image_id
     type: BINARY
 
-
-
-
-online_image:
-  - url: $initial_image_url
-    format: PNG
+  - platform: online_image
+    url: $initial_image_url
     id: online_image_id
+    format: PNG
 
     buffer_size: 32768
     resize: ${display_pixel_width}x${display_pixel_height}
@@ -347,37 +256,30 @@ online_image:
     placeholder: offline_image_id # optional
     on_download_finished:
       - then:
-        - lambda: |-
-            ESP_LOGI("online_image", "Image download finished");
-            id(image_downloading_events).trigger("image_downloading_complete");
-        - component.update: eink_display
+          - lambda: |-
+              ESP_LOGI("online_image", "Image download finished");
+              id(image_downloading_events).trigger("image_downloading_complete");
+          - component.update: eink_display
     on_error:
-        - lambda: |-
-            ESP_LOGE("online_image", "Could not download the image");
-            id(image_downloading_events).trigger("image_downloading_failed");
-
-
-
-
+      - lambda: |-
+          ESP_LOGE("online_image", "Could not download the image");
+          id(image_downloading_events).trigger("image_downloading_failed");
 
 # Set up the HTTP request component
 # HTTP request component to get picture URLs
 http_request:
-  #Arduino does not support SSL verification; on arduino this must be explicitly disabled (on ESP-IDF it's not necessary).
-  verify_ssl: false
+  verify_ssl: true
   useragent: esphome/1.0
   timeout: 120s
-
-
-
-
 
 # Now render everything on the ePaper screen.
 # See: https://esphome.io/components/display/waveshare_epaper.html
 display:
   - platform: waveshare_epaper
     id: eink_display
-    cs_pin: $gpio_cs_pin
+    cs_pin:
+      number: $gpio_cs_pin
+      ignore_strapping_warning: true
     reset_pin: $gpio_reset_pin
     dc_pin: $gpio_dc_pin
     busy_pin:
@@ -394,13 +296,14 @@ display:
       ESP_LOGW(TAG, "Rendering...");
       id(deep_sleep_id).prevent_deep_sleep();
 
-      it.fill(COLOR_OFF);
       if(id(wifi_id).is_connected()) {
+        it.fill(COLOR_OFF);
         // Fullscreen online image
         it.image(${display_min_pixel_x}, ${display_min_pixel_y}, id(online_image_id), COLOR_OFF, COLOR_ON);
-      } else { 
+      } else {
         ESP_LOGW(TAG, "Wifi not connected. Using offline image");
-        // Centered offline image
+        // Black background, offline image centered horizontally and vertically
+        it.fill(COLOR_ON);
         int mid_x = $display_min_pixel_x + $display_pixel_width / 2;
         int mid_y = $display_min_pixel_y + $display_pixel_height / 2;
         it.image(mid_x - id(offline_image_id).get_width()/2, mid_y - id(offline_image_id).get_height()/2, id(offline_image_id), COLOR_OFF, COLOR_ON);
