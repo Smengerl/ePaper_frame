@@ -7,30 +7,42 @@ source /config/esphome/epaper_display_packages/standard_config.sh
 source /config/esphome/epaper_display_packages/hugging_face_bearer_token.sh
 
 # URL for the API
-# Using hf-inference provider (native HF serverless, free tier) with FLUX.1-schnell
-# fal-ai and nscale require paid credits; hf-inference uses HF's own free monthly credits
-MODEL_URL="https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell"
+# Using hf-inference provider (native HF serverless, free tier).
+# As of August 2026, FLUX.1-schnell is deprecated on hf-inference; the only
+# text-to-image model left on this free provider is stabilityai/stable-diffusion-3-medium-diffusers.
+# It is gated: accept the license at https://huggingface.co/stabilityai/stable-diffusion-3-medium-diffusers
+# with the account matching your bearer token, otherwise the API returns a 403.
+# fal-ai and nscale offer FLUX.1-schnell etc. but require paid credits.
+MODEL_URL="https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-3-medium-diffusers"
+
+# stable-diffusion-3-medium requires height/width divisible by 16 (FLUX.1-schnell only needed 8).
+# The final output is cropped/scaled to $HEIGHT x $WIDTH by process_image_with_ffmpeg anyway,
+# so round down to the nearest multiple of 16 just for the generation request.
+GEN_HEIGHT=$((HEIGHT - HEIGHT % 16))
+GEN_WIDTH=$((WIDTH - WIDTH % 16))
 
 
 
 DAY_NUMBER=$(date +"%u") # 1=Monday, 7=Sunday
 DAY=$(date +"%d")
+DAY_NUM=$((10#$DAY)) # base-10 safe (DAY is zero-padded, e.g. "08")
 
 # Current season based on the month
 MONTH=$(date +"%m")
+MONTH_NUM=$((10#$MONTH)) # base-10 safe (MONTH is zero-padded, e.g. "08")
 
 
 
 
 
 
-if [[ "$MONTH" -eq 12 || "$MONTH" -le 2 ]]; then
+if [[ "$MONTH_NUM" -eq 12 || "$MONTH_NUM" -le 2 ]]; then
   SEASON="Winter"
   SEASON_ELEMENTS="Snow-covered trees, bare branches glistening with frost, icicles hanging from rooftops, snowfalls blanketing the ground, frosty mornings with visible breath, cold nights under a starry sky"
-elif [[ "$MONTH" -ge 3 && "$MONTH" -le 5 ]]; then
+elif [[ "$MONTH_NUM" -ge 3 && "$MONTH_NUM" -le 5 ]]; then
   SEASON="Spring"
   SEASON_ELEMENTS="blooming flowers, fields of daffodils and tulips, trees with fresh green leaves, crisp and fresh air"
-elif [[ "$MONTH" -ge 6 && "$MONTH" -le 8 ]]; then
+elif [[ "$MONTH_NUM" -ge 6 && "$MONTH_NUM" -le 8 ]]; then
   SEASON="Summer"
   SEASON_ELEMENTS="Lush green trees with thick foliage, sunflowers, blooming lavender fields, sunny days with clear blue skies"
 else
@@ -74,11 +86,12 @@ esac
 
 # Determine the time of day
 HOUR=$(date +"%H") # 24-hour format
+HOUR_NUM=$((10#$HOUR)) # base-10 safe (HOUR is zero-padded, e.g. "08")
 
 if [ "$IS_WORKDAY" = true ]; then
 
     # Workday activities
-    if [ "$HOUR" -ge 0 ] && [ "$HOUR" -lt 8 ]; then
+    if [ "$HOUR_NUM" -ge 0 ] && [ "$HOUR_NUM" -lt 8 ]; then
         TIME_OF_THE_DAY="in the morning"
         ACTIVITIES=( 
           "Having breakfast" 
@@ -95,7 +108,7 @@ if [ "$IS_WORKDAY" = true ]; then
           "at the front door" 
           "on their driveway"
           )
-    elif [ "$HOUR" -ge 8 ] && [ "$HOUR" -lt 12 ]; then
+    elif [ "$HOUR_NUM" -ge 8 ] && [ "$HOUR_NUM" -lt 12 ]; then
         TIME_OF_THE_DAY="in the morning"
         ACTIVITIES=( 
           "studying at home" 
@@ -113,7 +126,7 @@ if [ "$IS_WORKDAY" = true ]; then
           "in their study room" 
           "in a sunny backyard"
           )
-    elif [ "$HOUR" -ge 12 ] && [ "$HOUR" -lt 18 ]; then
+    elif [ "$HOUR_NUM" -ge 12 ] && [ "$HOUR_NUM" -lt 18 ]; then
         TIME_OF_THE_DAY="in the afternoon"
         ACTIVITIES=( 
           "having coffee and biskuits"
@@ -144,7 +157,7 @@ if [ "$IS_WORKDAY" = true ]; then
           "on their front porch" 
           )
     else
-    # elif [ "$HOUR" -ge 18 ] && [ "$HOUR" -lt 24 ]; then
+    # elif [ "$HOUR_NUM" -ge 18 ] && [ "$HOUR_NUM" -lt 24 ]; then
         TIME_OF_THE_DAY="in the evening"
         ACTIVITIES=( 
           "engaging in a fun activity together" 
@@ -173,7 +186,7 @@ if [ "$IS_WORKDAY" = true ]; then
 else
 
     # Weekend activities
-    if [ "$HOUR" -ge 0 ] && [ "$HOUR" -lt 10 ]; then
+    if [ "$HOUR_NUM" -ge 0 ] && [ "$HOUR_NUM" -lt 10 ]; then
         TIME_OF_THE_DAY="in the morning"
         ACTIVITIES=( 
           "sleeping in" 
@@ -190,7 +203,7 @@ else
           "in the garden"
           "in a cozy home" 
           )
-    elif [ "$HOUR" -ge 10 ] && [ "$HOUR" -lt 18 ]; then
+    elif [ "$HOUR_NUM" -ge 10 ] && [ "$HOUR_NUM" -lt 18 ]; then
         TIME_OF_THE_DAY="at daytime"
         ACTIVITIES=( 
           "going on a picnic"
@@ -213,7 +226,7 @@ else
           "at a playground" 
           )
     else
-    # elif [ "$HOUR" -ge 18 ] && [ "$HOUR" -lt 24 ]; 
+    # elif [ "$HOUR_NUM" -ge 18 ] && [ "$HOUR_NUM" -lt 24 ]; 
         TIME_OF_THE_DAY="in the evening"
         ACTIVITIES=(
           "roasting marshmallows" 
@@ -270,8 +283,8 @@ The third child is a 7 year old boy with blonde hair."
 ###########################################################
 # Advent calendar special mode during december
 ###########################################################
-if [ $MONTH -eq 12 ]; then
-  if [ $DAY -lt 24 ]; then
+if [ "$MONTH_NUM" -eq 12 ]; then
+  if [ "$DAY_NUM" -lt 24 ]; then
     PROMPT="$RENDERING_ADVISE \
 The picture shows a close-up view on a part of a paper advent calendar. \
 The image focuses on the calendar door for the current day, $DAY, and shows fractions of other doors. \
@@ -282,7 +295,7 @@ The whole scene is humorous and ironic as the elf seems to be chaotic."
 
     echo "Advent mode!"
 
-  elif [ $DAY -eq 24 ]; then
+  elif [ "$DAY_NUM" -eq 24 ]; then
     PROMPT="$RENDERING_ADVISE \
 The picture shows a close-up view on a part of a paper advent calendar. \
 The image focuses on the calendar door for December 24th and shows fractions of other doors. \
@@ -326,8 +339,8 @@ curl \
   --output "$TEMP_IMAGE_FILENAME" \
   -d "{\
 \"parameters\": {\
-\"height\": $HEIGHT,\
-\"width\": $WIDTH\
+\"height\": $GEN_HEIGHT,\
+\"width\": $GEN_WIDTH\
 }, \
 \"inputs\": \"$PROMPT\"\
 }"

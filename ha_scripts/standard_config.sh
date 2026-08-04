@@ -28,7 +28,7 @@ exec > $LOG_FILE 2>&1
 backup_file() {
     echo "Backing up file..."
     # Backup file for later use
-    mkdir $BACKUP_DIRECTORY
+    mkdir -p "$BACKUP_DIRECTORY"
     #cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
     cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
 }
@@ -77,7 +77,7 @@ process_image_with_ffmpeg() {
     echo "Crop dimensions: width=$crop_width, height=$crop_height, x=$offset_x, y=$offset_y"
 
     # Run ffmpeg with the calculated crop and scale
-    ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -vf "format=gray,crop=${crop_width}:${crop_height}:${offset_x}:${offset_y},scale=${WIDTH}:${HEIGHT}:sws_dither=bayer" -c:v png "$OUTPUT_FILENAME"
+    ffmpeg -y -i "$TEMP_IMAGE_FILENAME" -vf "format=gray,crop=${crop_width}:${crop_height}:${offset_x}:${offset_y},scale=${WIDTH}:${HEIGHT}:sws_dither=bayer" -c:v png -update 1 "$OUTPUT_FILENAME"
 
     if [ $? -eq 0 ]; then
         echo "Image processed successfully: $OUTPUT_FILENAME"
