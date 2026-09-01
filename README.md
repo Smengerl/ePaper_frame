@@ -136,6 +136,9 @@ Source code is under `./esphome_src`
 - `/shared_packages/debug_basics.yaml`: Adds debug releated entities (optional), generic - not limited to use in this project
 - `/shared_packages/deep_sleep.yaml`: Contains all deep sleep related code (optional), generic - not limited to use in this project
 - `/images/offline.png`: Fallback image
+- `/secrets.yaml.example`: Template for the credentials the config expects
+
+Before flashing, copy [`esphome_src/secrets.yaml.example`](./esphome_src/secrets.yaml.example) to `[homeassistant]/config/esphome/secrets.yaml` and fill in your own values (`wifi_ssid`, `wifi_password`, `epaper_api_key`, `epaper_ota_pw`, `epaper_fallback_pw`). `secrets.yaml` is git-ignored.
 
 ### home assistant automation
 
