@@ -179,8 +179,11 @@ actions:
 - action: esphome.epaper_display_sleep_until
   metadata: {}
   data:
-    target_minute: 0
-    target_hour: 6
+    # Absolute Unix epoch (UTC) of the next 06:00 local time. HA does the
+    # timezone/DST math; the device only computes target - now.
+    target: >-
+      {{ (today_at('06:00') if today_at('06:00') > now()
+          else today_at('06:00') + timedelta(days=1)) | as_timestamp | int }}
 mode: single
 ```
 

@@ -195,7 +195,6 @@ captive_portal:
 # Dashboard import for easy device updates
 dashboard_import:
   package_import_url: github://esphome/example-configs/esphome-web/esp32.yaml@main
-  import_full_config: true
 
 #-------------------------------------------
 # Bluetooth Provisioning (Optional)

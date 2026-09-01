@@ -11,7 +11,10 @@ substitutions:
   fallback_hotspot_ssid: "EPaper Fallback Hotspot"
   fallback_hotspot_pw: !secret epaper_fallback_pw
 
-  initial_image_url: http://homeassistant.local:8123/local/output.png
+  # Path relative to http://<HA>:8123/ . The device learns the HA address on every
+  # API connect from client_address (no mDNS/homeassistant.local, no fixed IP).
+  # A full http(s):// URL in the image_url text is still used as-is.
+  initial_image_path: "local/output.png"
 
 packages:
   device_basics: !include epaper_display_packages/device_basics.yaml
@@ -28,18 +31,11 @@ esphome:
     name: ${project_name}
     version: "1.0"
   on_boot:
-    priority: -100 # Call this script as late as possible to make sure the event is dispatched to HA
+    priority: -100
     then:
       - light.turn_on: onboard_led # Turn on the LED during startup
-
-      - wait_until: api.connected # Wait for API to be conected and then send event informing about startup reason
-      - lambda: |-
-          if (id(auto_load_render).state) {
-            ESP_LOGI("${TAG}", "Automatic downloading and rendering on startup started");
-            id(online_image_id).update();
-          } else {
-            ESP_LOGD("${TAG}", "No automatic downloading and rendering on startup");
-          }
+      # Auto download + render happens in api.on_client_connected (only then is the
+      # HA address known via client_address).
 
 # Onboard LED control
 output:
@@ -122,6 +118,7 @@ number:
     unit_of_measurement: "h"
     icon: "mdi:refresh-auto"
     optimistic: true
+    restore_value: true # Remember the auto-refresh interval across reboots (otherwise back to 0 = off)
     min_value: 0
     max_value: 96
     step: 1
@@ -141,13 +138,20 @@ globals:
     type: int
     restore_value: no
     initial_value: "0"
-  #-------------------------------------------
 
-  - id: home_assistant_local_ip
+  # HA address (IP), learned from api.on_client_connected -> client_address.
+  # Empty until the first connect. restore_value: learned IP as a fallback across reboots.
+  - id: ha_host
     type: std::string
     restore_value: yes
     max_restore_data_length: 50
-    initial_value: '"homeassistant.local"'
+    initial_value: '""'
+
+  # Auto-render only once per boot (not on every API reconnect)
+  - id: did_initial_render
+    type: bool
+    restore_value: no
+    initial_value: "false"
 
 button:
   - platform: template
@@ -172,13 +176,34 @@ text:
     mode: text
     optimistic: true
     restore_value: yes
-    initial_value: $initial_image_url
+    # Holds either a path (e.g. "local/output.png" -> http://<HA>:8123/<path>)
+    # OR a full http(s):// URL (used unchanged in that case).
+    initial_value: $initial_image_path
     on_value:
       then:
-        - online_image.set_url:
-            url: !lambda |-
-              return id(image_url).state.c_str();
-            id: online_image_id
+        - script.execute: apply_image_url
+
+script:
+  # Builds the image URL from image_url + the learned HA address (ha_host) and hands
+  # it to online_image. Called on image_url change and on api.on_client_connected
+  # (then with a fresh IP).
+  - id: apply_image_url
+    then:
+      - lambda: |-
+          std::string v = id(image_url).state;
+          std::string url;
+          if (v.rfind("http://", 0) == 0 || v.rfind("https://", 0) == 0) {
+            url = v;                                  // full URL - unchanged
+          } else {
+            if (id(ha_host).empty()) {
+              ESP_LOGD("${TAG}", "HA address not known yet - image URL not set");
+              return;
+            }
+            if (!v.empty() && v[0] == '/') v.erase(0, 1);
+            url = "http://" + id(ha_host) + ":8123/" + v;
+          }
+          ESP_LOGI("${TAG}", "Image URL: %s", url.c_str());
+          id(online_image_id).set_url(url);
 
 #-------------------------------------------
 # API
@@ -187,9 +212,18 @@ text:
 #-------------------------------------------
 api:
   on_client_connected:
-    lambda: |-
-      ESP_LOGW("${TAG}", "HA connected from IP %s", client_address.c_str());
-      id(home_assistant_local_ip) = client_address.c_str(); // Example value: 192.168.31.177
+    - lambda: |-
+        ESP_LOGI("${TAG}", "HA connected from %s", client_address.c_str());
+        id(ha_host) = client_address.c_str();
+    - script.execute: apply_image_url   # rebuild the image URL with the fresh IP
+    - if:
+        condition:
+          lambda: "return id(auto_load_render).state && !id(did_initial_render);"
+        then:
+          - lambda: "id(did_initial_render) = true;"
+          - lambda: |-
+              ESP_LOGI("${TAG}", "Auto download + render on startup");
+              id(online_image_id).update();
 
   encryption:
     key: ${api_key}
@@ -197,45 +231,31 @@ api:
   actions:
     - action: epaper_reload_image
       then:
-        - lambda: |-
-            id(online_image_id).update();
+        - lambda: "id(online_image_id).update();"
 
     - action: epaper_render
       then:
-        - lambda: |-
-            id(eink_display).update();
+        - lambda: "id(eink_display).update();"
 
+    # Set a full URL - http(s)://... is used unchanged
     - action: epaper_set_image_url
       variables:
         url: string
       then:
-        - online_image.set_url:
-            url: !lambda |-
-              ESP_LOGI("${TAG}", "Set image URL: %s", url.c_str());
+        - lambda: |-
+            auto call = id(image_url).make_call();
+            call.set_value(url);
+            call.perform();
 
-              auto call = id(image_url).make_call();
-              call.set_value(url.c_str());
-              call.perform();
-
-              return url.c_str();
-            id: online_image_id
-
+    # Filename under /local/ (backwards compatible: "output.png" -> local/output.png)
     - action: epaper_set_local_image_url
       variables:
         local_url: string
       then:
-        - online_image.set_url:
-            url: !lambda |-
-              static char buf[200];
-              snprintf(buf, sizeof(buf), "http://%s:8123/local/%s", id(home_assistant_local_ip).c_str(), local_url.c_str());
-              ESP_LOGI("${TAG}", "Set local URL: %s --> %s", local_url.c_str(), buf);
-
-              auto call = id(image_url).make_call();
-              call.set_value(buf);
-              call.perform();
-
-              return buf;
-            id: online_image_id
+        - lambda: |-
+            auto call = id(image_url).make_call();
+            call.set_value(std::string("local/") + local_url);
+            call.perform();
 
 # NOTE: migrated image: and online_image: to the new image: platform format
 # (platform: file / platform: online_image)
@@ -246,9 +266,12 @@ image:
     type: BINARY
 
   - platform: online_image
-    url: $initial_image_url
+    # Placeholder - overwritten via set_url() by apply_image_url (image_url on_value /
+    # on_client_connected) before every real fetch.
+    url: "http://127.0.0.1/"
     id: online_image_id
     format: PNG
+    update_interval: never   # only fetch on .update()
 
     buffer_size: 32768
     resize: ${display_pixel_width}x${display_pixel_height}
@@ -268,7 +291,10 @@ image:
 # Set up the HTTP request component
 # HTTP request component to get picture URLs
 http_request:
-  verify_ssl: true
+  # false: images come over http:// from HA. verify_ssl: true would link the whole
+  # CA bundle (~64 KB flash) into the esp-idf build for nothing. https sources are
+  # still loaded, just without cert verification.
+  verify_ssl: false
   useragent: esphome/1.0
   timeout: 120s
 
@@ -293,7 +319,7 @@ display:
     lambda: |-
       static const char *TAG = "${TAG} - Rendering cycle";
 
-      ESP_LOGW(TAG, "Rendering...");
+      ESP_LOGI(TAG, "Rendering...");
       id(deep_sleep_id).prevent_deep_sleep();
 
       if(id(wifi_id).is_connected()) {
@@ -309,6 +335,6 @@ display:
         it.image(mid_x - id(offline_image_id).get_width()/2, mid_y - id(offline_image_id).get_height()/2, id(offline_image_id), COLOR_OFF, COLOR_ON);
       }
 
-      ESP_LOGW(TAG, "Rendering done");
+      ESP_LOGI(TAG, "Rendering done");
       id(deep_sleep_id).allow_deep_sleep();
       id(rendering_events).trigger("render_complete");

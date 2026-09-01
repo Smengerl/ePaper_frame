@@ -1,110 +1,179 @@
 #-------------------------------------------
-# Deep Sleep Management
-# Enables power-saving mode and wakeup tracking
+# Deep Sleep Management  (shared package)
+#
+# Expected from the including configuration:
+#   - substitution ${TAG}     (log tag)
+#   - id(onboard_led)         (a light: - turned off before sleeping)
+# Provides:
+#   - id(esptime)             (SNTP time source, UTC epoch only - NO timezone)
+#   - id(deep_sleep_id)       (deep_sleep component)
+#   - API actions sleep_for / sleep_until
+#   - sensor "Last boot", text_sensor "Wakeup Cause", switch "Prevent Deep Sleep"
+#
+# Timezone-free: sleep_until receives an ABSOLUTE Unix epoch (UTC) from HA and only
+# computes target - now. All wall-clock / DST logic lives in HA.
+#
+# Behaviour: the device does NOT sleep autonomously after a fixed time - HA drives
+# it via sleep_for / sleep_until. run_duration is only a safety net: if HA says
+# nothing within run_duration (HA down / network lost), the device sleeps for
+# sleep_duration and retries after waking.
 #-------------------------------------------
 
-sensor:
-# Sensor to track why the device woke up from deep sleep
-# Values correspond to ESP32 wakeup causes (timer, touchpad, GPIO, etc.)
-  - platform: template
-    name: "Wakeup Cause"
-    id: boot_wakeup_cause
-    update_interval: never
-    accuracy_decimals: 0
+substitutions:
+  deep_sleep_run_duration: "8min"    # safety-net window (also: OTA/debug after a fresh flash!)
+  deep_sleep_safety_sleep: "1h"      # how long to sleep when HA says nothing
 
-# Timestamp of the last device boot/wakeup
+globals:
+  - id: boot_ts_published
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+sensor:
+  # Unix timestamp of the last boot. Published on on_time_sync (the earliest moment
+  # with a valid time - at on_boot the HA/NTP time is not there yet).
   - platform: template
     name: "Last boot"
     id: boot_timestamp
     device_class: timestamp
+    entity_category: diagnostic
     update_interval: never
 
+text_sensor:
+  # Wakeup reason. Raw esp_sleep_get_wakeup_cause() -> readable via map.
+  - platform: template
+    name: "Wakeup Cause"
+    id: boot_wakeup_cause
+    entity_category: diagnostic
+    filters:
+      - map:
+          - "0 -> Power-on / Reset"
+          - "2 -> Button (EXT0)"
+          - "3 -> EXT1"
+          - "4 -> Timer"
+          - "5 -> Touchpad"
+          - "6 -> ULP"
+          - "7 -> GPIO"
+          - "8 -> UART"
 
 esphome:
   on_boot:
-    # Execute this after all other boot tasks are complete
     priority: -100
     then:
       - lambda: |-
-          id(boot_timestamp).publish_state(id(esptime).now().timestamp); //.strftime("%Y-%m-%dT%H:%M:%S"));
-          auto wakeup_cause = esp_sleep_get_wakeup_cause();
-          id(boot_wakeup_cause).publish_state(wakeup_cause);
+          id(boot_wakeup_cause).publish_state(str_sprintf("%d", (int) esp_sleep_get_wakeup_cause()));
 
 #-------------------------------------------
-# Time Synchronization
-# Required for sleep scheduling and timestamps
+# Time: SNTP - independent of the HA API connection (works even when HA is down)
+# and valid sooner (no encrypted API handshake needed).
+# No timezone: - only the UTC epoch is used (timestamp_now / .timestamp).
 #-------------------------------------------
 time:
-  - platform: homeassistant
+  - platform: sntp
     id: esptime
+    servers:
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+      - 2.pool.ntp.org
+    on_time_sync:
+      then:
+        - if:
+            condition:
+              lambda: "return !id(boot_ts_published);"
+            then:
+              - lambda: |-
+                  id(boot_ts_published) = true;
+                  id(boot_timestamp).publish_state(id(esptime).now().timestamp);
 
 #-------------------------------------------
-# Deep Sleep Configuration
+# Deep Sleep
 #-------------------------------------------
 deep_sleep:
   id: deep_sleep_id
+  # Safety net (see above). Normally HA's sleep_until fires first and sets the real
+  # (24h) duration via set_sleep_duration().
+  # NOTE: after a fresh flash only run_duration minutes remain for OTA/debug
+  # -> turn on the "Prevent Deep Sleep" switch in HA to work on the device longer.
+  run_duration: ${deep_sleep_run_duration}
+  sleep_duration: ${deep_sleep_safety_sleep}
 
-  # Allow manual wakeup using the boot button (GPIO0)
-  # Button press (low signal) will wake the device
+  # Manual wakeup via the boot button (GPIO0, active-low)
   wakeup_pin:
     number: GPIO0
     inverted: true
     mode: INPUT_PULLUP
     ignore_strapping_warning: true
 
+switch:
+  # Debug / work switch: keeps the device awake (against run_duration AND against
+  # HA's sleep_for/sleep_until). Only briefly reset by a running render
+  # (epaper: prevent/allow_deep_sleep in the display lambda).
+  - platform: template
+    name: "Prevent Deep Sleep"
+    id: prevent_deep_sleep_switch
+    icon: "mdi:sleep-off"
+    entity_category: config
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: 'ESP_LOGW("${TAG}", "Deep sleep prevented (switch). Turn off / reboot to clear.");'
+      - deep_sleep.prevent: deep_sleep_id
+    turn_off_action:
+      - deep_sleep.allow: deep_sleep_id
+
 #-------------------------------------------
-# API Actions for Sleep Control
-# Expose sleep functions for Home Assistant automations
+# API actions for HA
 #-------------------------------------------
 api:
   actions:
-  # Action to put device to sleep for a specified number of minutes
+  # Sleep for N minutes
   - action: sleep_for
     variables:
       min: int
     then:
       - lambda: |-
+          if (min <= 0) { ESP_LOGW("${TAG}", "sleep_for: min <= 0 -> ignored"); return; }
           ESP_LOGI("${TAG}", "Sleep for %d min", (int) min);
-          id(onboard_led).turn_off(); // Turn off the LED before deep sleep
-
-          id(deep_sleep_id).set_sleep_duration(min*60*1000); // parameter is in min, needs to be converted to ms
+          id(onboard_led).turn_off();
+          id(deep_sleep_id).set_sleep_duration((uint32_t) min * 60UL * 1000UL);
           id(deep_sleep_id).begin_sleep();
 
-  # Action to schedule wakeup at a specific time (HH:MM)
-  # If target time has passed today, will wake tomorrow at that time
+  # Sleep until an absolute point in time. target = Unix epoch (UTC), computed by HA
+  # (HA knows the timezone + DST). ESPHome only computes target - now.
   - action: sleep_until
     variables:
-      target_minute: int
-      target_hour: int
+      target: int
     then:
       - lambda: |-
-          if (target_minute>=0 && target_minute<60) {
-            if (target_hour>=0 && target_hour<24) {
-
-              time_t current_time_t = id(esptime).timestamp_now();
-              struct tm *timeinfo = localtime(&current_time_t);
-              timeinfo->tm_hour = (unsigned int)target_hour;
-              timeinfo->tm_min = target_minute;
-              timeinfo->tm_sec = 0;
-              time_t sleep_until_time_t = mktime(timeinfo);
-
-              if (sleep_until_time_t <= current_time_t) {
-                // If target time has already passed today, add one day
-                sleep_until_time_t += 24 * 60 * 60;
-              }
-
-              int difference = (int)difftime(sleep_until_time_t, current_time_t); // Difference in seconds
-
-              ESP_LOGW("${TAG}", "Sleep until %02d:%02d equals sleeping for %ds (%02d:%02d:%02d)", (int) target_hour, (int) target_minute, difference, difference / 3600, (difference % 3600) / 60, difference % 60);
-              id(onboard_led).turn_off(); // Turn off the LED before deep sleep
-              id(deep_sleep_id).set_sleep_duration(difference*1000); 
-              id(deep_sleep_id).begin_sleep();
-
-            } else {
-              ESP_LOGW("${TAG}", "hour need to be a value between 0-23");
-            }
-          } else {
-            ESP_LOGW("${TAG}", "min need to be a value between 0-60");
+          if (!id(esptime).now().is_valid()) {
+            ESP_LOGW("${TAG}", "sleep_until: time not valid yet -> sleep 1h, retry");
+            id(onboard_led).turn_off();
+            id(deep_sleep_id).set_sleep_duration(3600UL * 1000UL);
+            id(deep_sleep_id).begin_sleep();
+            return;
           }
 
+          time_t now_t = id(esptime).timestamp_now();
+          if (target <= now_t) {
+            ESP_LOGW("${TAG}", "sleep_until: target (%ld) is in the past (now=%ld) -> 1h retry",
+                     (long) target, (long) now_t);
+            id(onboard_led).turn_off();
+            id(deep_sleep_id).set_sleep_duration(3600UL * 1000UL);
+            id(deep_sleep_id).begin_sleep();
+            return;
+          }
 
+          uint32_t secs = (uint32_t) (target - now_t);
+          if (secs > 48u * 3600u) {   // plausibility: daily device, > 48h is an error
+            ESP_LOGW("${TAG}", "sleep_until: %us > 48h implausible -> 1h retry", secs);
+            id(onboard_led).turn_off();
+            id(deep_sleep_id).set_sleep_duration(3600UL * 1000UL);
+            id(deep_sleep_id).begin_sleep();
+            return;
+          }
+
+          ESP_LOGI("${TAG}", "Sleep until epoch %ld = %us (%02u:%02u:%02u)",
+                   (long) target, secs, secs / 3600, (secs % 3600) / 60, secs % 60);
+          id(onboard_led).turn_off();
+          id(deep_sleep_id).set_sleep_duration(secs * 1000UL);
+          id(deep_sleep_id).begin_sleep();
