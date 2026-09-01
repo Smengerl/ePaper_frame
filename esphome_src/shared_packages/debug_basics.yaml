@@ -20,22 +20,13 @@ sensor:
 #      name: "PSRAM"
 #      entity_category: diagnostic
 
-  # WiFi signal strength in dBm (internal use only)
+  # WiFi signal strength, reported natively in dBm.
+  # Home Assistant's "signal_strength" device class only accepts dBm/dB,
+  # so the value is exposed as-is instead of being converted to a percentage.
   - platform: wifi_signal
-    name: "WiFi Signal"
+    name: "WiFi Strength"
     id: wifi_signal_db
     update_interval: 60s
-    entity_category: diagnostic
-    internal: true
-
-  # WiFi signal strength converted to percentage (0-100%)
-  # Formula converts dBm to percentage: 2 * (dBm + 100)
-  - platform: copy
-    source_id: wifi_signal_db
-    name: "WiFi Strength"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
     entity_category: diagnostic
 
 
@@ -78,5 +69,3 @@ button:
   - platform: restart
     entity_category: diagnostic
     name: "Restart"
-
-
