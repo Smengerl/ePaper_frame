@@ -178,6 +178,14 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
+  # On a weak/marginal WiFi link, the default LIGHT power-save mode can cause
+  # beacon-timeout disconnect/reconnect storms - and the TX current spikes from
+  # reconnecting can even brown out a marginal power supply. power_save_mode: none
+  # avoids this at the cost of a bit more power draw, which is fine for a
+  # mains-powered picture frame. If your frame sits close to the access point you
+  # may not need this.
+  power_save_mode: none
+
   # Enable fallback hotspot in case WiFi connection fails
   # Creates an access point for manual WiFi configuration
   ap:

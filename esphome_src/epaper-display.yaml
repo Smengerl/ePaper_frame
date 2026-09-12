@@ -16,6 +16,11 @@ substitutions:
   # A full http(s):// URL in the image_url text is still used as-is.
   initial_image_path: "local/output.png"
 
+  # Override the shared 8min default: the morning HA automation may take a while
+  # generating a new image while the device waits online for its sleep_until, so
+  # give it more head-room (fine for a mains-powered picture frame).
+  deep_sleep_run_duration: "20min"
+
 packages:
   device_basics: !include epaper_display_packages/device_basics.yaml
   debug_basics: !include shared_packages/debug_basics.yaml
@@ -154,6 +159,13 @@ globals:
     restore_value: no
     initial_value: "false"
 
+  # Bounded auto-retry counter for failed image downloads (e.g. network not fully
+  # ready right after wake). Reset on every successful download.
+  - id: img_dl_retries
+    type: int
+    restore_value: no
+    initial_value: "0"
+
 button:
   - platform: template
     name: "Reload image"
@@ -281,13 +293,27 @@ image:
     on_download_finished:
       - then:
           - lambda: |-
+              id(img_dl_retries) = 0;   // success - clear retry budget
               ESP_LOGI("online_image", "Image download finished");
               id(image_downloading_events).trigger("image_downloading_complete");
           - component.update: eink_display
     on_error:
-      - lambda: |-
-          ESP_LOGE("online_image", "Could not download the image");
-          id(image_downloading_events).trigger("image_downloading_failed");
+      - if:
+          condition:
+            lambda: "return id(img_dl_retries) < 3;"
+          then:
+            # Transient failure (DNS/routing not ready just after wake, HA busy
+            # writing the image, ...) - back off briefly and try again.
+            - lambda: |-
+                id(img_dl_retries) += 1;
+                ESP_LOGW("online_image", "Download failed - retry %d/3 in 15s", id(img_dl_retries));
+            - delay: 15s
+            - lambda: "id(online_image_id).update();"
+          else:
+            - lambda: |-
+                id(img_dl_retries) = 0;
+                ESP_LOGE("online_image", "Could not download the image (gave up after 3 retries)");
+                id(image_downloading_events).trigger("image_downloading_failed");
 
 # Set up the HTTP request component
 # HTTP request component to get picture URLs

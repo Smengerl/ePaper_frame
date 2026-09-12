@@ -144,49 +144,85 @@ Before flashing, copy [`esphome_src/secrets.yaml.example`](./esphome_src/secrets
 
 You can use the ePaper ESP home device in automations in home assistant.
 
-The following automation can serve as an example. 
-- Once a day at 6:00 it creates a new image and refreshes the ePaper display while it is put to deep sleep all other times. 
-- As the script is being triggered when the picture frame wakes up, you can also trigger creating a new image by waking up the frame manually via the boot-button on ESP.
-- Such automation can use different images sources for which you will find some examples further below.
+The following automation can serve as an example.
+- Once a day at 6:00 it creates a new image and refreshes the ePaper display, then puts the frame back to deep sleep until the next day.
+- As the automation is triggered by the frame coming online, waking it up manually via the boot button also triggers a fresh image.
+- If image generation or rendering fails for any reason, it retries in an hour instead of leaving the frame stuck awake (draining the battery) or asleep for a full day.
+- Such automation can use different image sources for which you will find some examples further below.
 
+You also need an `input_datetime` helper (Settings → Devices & Services → Helpers → Create Helper → Date and/or time), e.g. named `epaper_last_render`. It is used to render at most once a day even if the frame reconnects to Wi-Fi several times during the morning window.
 
 Source code for these scripts is under `./ha_scripts`
 
 ```yaml
 alias: Create AI image
-description: Create an fresh AI image every day at 6:00 on the picture frame with deep sleep support
+description: Create a fresh AI image once a day and put the frame to deep sleep until the next day.
 triggers:
-- trigger: homeassistant
-  event: start
-- trigger: state
-  entity_id:
-  - binary_sensor.epaper_display_status
-  to: 'on'
-conditions: []
-actions:
-- action: remote_command_line.generate_ai_image
-  data: {}
-  enabled: true
-- wait_for_trigger:
+  # Primary path: the frame wakes ~06:00 and announces itself over the API.
   - trigger: state
-    entity_id:
-    - event.epaper_display_rendering
-    to: render_complete
-    attribute: event_type
-  continue_on_timeout: true
-  timeout:
-    hours: 0
-    minutes: 3
-    seconds: 0
-    milliseconds: 0
-- action: esphome.epaper_display_sleep_until
-  metadata: {}
-  data:
-    # Absolute Unix epoch (UTC) of the next 06:00 local time. HA does the
-    # timezone/DST math; the device only computes target - now.
-    target: >-
-      {{ (today_at('06:00') if today_at('06:00') > now()
-          else today_at('06:00') + timedelta(days=1)) | as_timestamp | int }}
+    entity_id: binary_sensor.epaper_display_connection_state
+    to: "on"
+  - trigger: homeassistant
+    event: start
+  # Fallback: only matters if the frame was already awake before the time window
+  # below opens (then there is no off->on edge on connection_state to trigger on).
+  - trigger: time
+    at: "06:00:00"
+conditions:
+  # Without a reachable frame, reload/sleep are pointless.
+  - condition: state
+    entity_id: binary_sensor.epaper_display_connection_state
+    state: "on"
+  - condition: time
+    after: "05:30:00"
+    before: "12:00:00"
+  # Render at most once a day - guards against reconnect storms re-triggering this.
+  - condition: template
+    value_template: >-
+      {{ state_attr('input_datetime.epaper_last_render', 'timestamp') is none
+         or state_attr('input_datetime.epaper_last_render', 'timestamp') < today_at('00:00') | as_timestamp }}
+actions:
+  # Image generation must never block the reload + deep sleep below, so continue
+  # regardless of outcome - the script itself falls back to a placeholder image
+  # (see generate_new_image.sh) if the AI API fails.
+  - action: remote_command_line.generate_ai_image
+    data: {}
+    continue_on_error: true
+  - delay:
+      seconds: 2
+  # Explicitly triggers online_image.update() -> download -> render of the image
+  # that was just generated above.
+  - action: esphome.epaper_display_epaper_reload_image
+    data: {}
+    continue_on_error: true
+  - wait_for_trigger:
+      # IMPORTANT: do not add `attribute: event_type` + `to: render_complete` here.
+      # This event entity only ever fires ONE event type (render_complete), so that
+      # attribute value never actually *changes* between two triggers - and Home
+      # Assistant's state trigger only fires on a real change. Add the filter and
+      # this fires once (right after flashing) and then never again, silently
+      # breaking the automation from then on. Watching the bare state is enough:
+      # it is the event's timestamp, which is guaranteed to change on every render.
+      - trigger: state
+        entity_id: event.epaper_display_rendering
+    continue_on_timeout: true
+    timeout:
+      minutes: 4
+  - if: "{{ wait.completed }}"
+    then:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.epaper_last_render
+        data:
+          datetime: "{{ now() }}"
+  - action: esphome.epaper_display_sleep_until
+    data:
+      # Absolute Unix epoch (UTC). HA does the timezone/DST math, the device only
+      # computes target - now. Success -> sleep until 06:00 tomorrow. Timeout above
+      # -> sleep only 1h so the frame retries soon instead of getting stuck.
+      target: >-
+        {% set base = today_at('06:00') if today_at('06:00') > now() else today_at('06:00') + timedelta(days=1) %}
+        {{ (base if wait.completed else now() + timedelta(hours=1)) | as_timestamp | int }}
 mode: single
 ```
 

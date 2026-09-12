@@ -31,6 +31,10 @@ backup_file() {
     mkdir -p "$BACKUP_DIRECTORY"
     #cp $TEMP_IMAGE_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $TEMP_IMAGE_FILENAME)
     cp $OUTPUT_FILENAME $BACKUP_DIRECTORY/$(date +"%Y%m%d%H%M%S").$(basename $OUTPUT_FILENAME)
+
+    # Prune backups older than 30 days so this directory doesn't grow unbounded
+    echo "Cleaning up backups older than 30 days..."
+    find "$BACKUP_DIRECTORY" -name "*.$(basename $OUTPUT_FILENAME)" -type f -mtime +30 -delete
 }
 
 

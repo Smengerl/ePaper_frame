@@ -344,34 +344,50 @@ curl \
 }, \
 \"inputs\": \"$PROMPT\"\
 }"
+curl_rc=$?
 
 # Disable debug mode to stop printing commands
 set +x
 
 
+# Fallback: if the AI generation fails (HF API down, model gated/deprecated,
+# rate-limited, "model loading" JSON, ...), fetch a grayscale random photo so the
+# frame still gets a fresh image today instead of showing yesterday's.
+fallback_picsum() {
+    echo "AI generation failed - falling back to Lorem Picsum grayscale image..."
+    curl -L --max-time 90 --trace-ascii "$TRACE_FILENAME" --trace-time \
+      "https://picsum.photos/${WIDTH}/${HEIGHT}?grayscale" --output "$TEMP_IMAGE_FILENAME"
+    if [ $? -ne 0 ] || [ ! -s "$TEMP_IMAGE_FILENAME" ] || jq empty "$TEMP_IMAGE_FILENAME" >/dev/null 2>&1; then
+        echo "Fallback image download failed too - keeping the previous image."
+        exit 1
+    fi
+    echo "Fallback image downloaded successfully as $TEMP_IMAGE_FILENAME."
+}
+
+
 # Check if the download was successful
-if [ $? -eq 0 ]; then
+if [ "$curl_rc" -eq 0 ]; then
 
     # Validate if the file contains JSON
     if jq empty "$TEMP_IMAGE_FILENAME" >/dev/null 2>&1; then
 
       # Attempt to retrieve the specified field
       json_error_value=$(jq -r --arg field "error" '.[$field]' "$TEMP_IMAGE_FILENAME")
-      
+
       # Check if the field is null (not found)
       if [[ "$json_error_value" != "null" ]]; then
           echo "Error: $json_error_value"
       fi
 
       echo "Hugging Face API returned JSON error"
-      exit 1
+      fallback_picsum
 
     else
       echo "Image downloaded successfully as $TEMP_IMAGE_FILENAME."
     fi
 else
     echo "Failed to download the image."
-    exit 1
+    fallback_picsum
 fi
 
 
