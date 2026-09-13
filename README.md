@@ -148,6 +148,7 @@ The following automation can serve as an example.
 - Once a day at 6:00 it creates a new image and refreshes the ePaper display, then puts the frame back to deep sleep until the next day.
 - As the automation is triggered by the frame coming online, waking it up manually via the boot button also triggers a fresh image.
 - If image generation or rendering fails for any reason, it retries in an hour instead of leaving the frame stuck awake (draining the battery) or asleep for a full day.
+- Every other wake-up (Wi-Fi reconnects outside the window, HA restarts, ...) still gets an explicit sleep command re-arming it until the next window, instead of relying on any device-side default - see the comment on `default:` in the automation below for why this matters.
 - Such automation can use different image sources for which you will find some examples further below.
 
 You also need an `input_datetime` helper (Settings → Devices & Services → Helpers → Create Helper → Date and/or time), e.g. named `epaper_last_render`. It is used to render at most once a day even if the frame reconnects to Wi-Fi several times during the morning window.
@@ -169,60 +170,85 @@ triggers:
   - trigger: time
     at: "06:00:00"
 conditions:
-  # Without a reachable frame, reload/sleep are pointless.
+  # Without a reachable frame, reload/sleep are pointless. Keep this the ONLY
+  # automation-wide condition - see the comment on `default:` below for why
+  # the render-window / once-a-day checks must NOT sit here as well.
   - condition: state
     entity_id: binary_sensor.epaper_display_connection_state
     state: "on"
-  - condition: time
-    after: "05:30:00"
-    before: "12:00:00"
-  # Render at most once a day - guards against reconnect storms re-triggering this.
-  - condition: template
-    value_template: >-
-      {{ state_attr('input_datetime.epaper_last_render', 'timestamp') is none
-         or state_attr('input_datetime.epaper_last_render', 'timestamp') < today_at('00:00') | as_timestamp }}
 actions:
-  # Image generation must never block the reload + deep sleep below, so continue
-  # regardless of outcome - the script itself falls back to a placeholder image
-  # (see generate_new_image.sh) if the AI API fails.
-  - action: remote_command_line.generate_ai_image
-    data: {}
-    continue_on_error: true
-  - delay:
-      seconds: 2
-  # Explicitly triggers online_image.update() -> download -> render of the image
-  # that was just generated above.
-  - action: esphome.epaper_display_epaper_reload_image
-    data: {}
-    continue_on_error: true
-  - wait_for_trigger:
-      # IMPORTANT: do not add `attribute: event_type` + `to: render_complete` here.
-      # This event entity only ever fires ONE event type (render_complete), so that
-      # attribute value never actually *changes* between two triggers - and Home
-      # Assistant's state trigger only fires on a real change. Add the filter and
-      # this fires once (right after flashing) and then never again, silently
-      # breaking the automation from then on. Watching the bare state is enough:
-      # it is the event's timestamp, which is guaranteed to change on every render.
-      - trigger: state
-        entity_id: event.epaper_display_rendering
-    continue_on_timeout: true
-    timeout:
-      minutes: 4
-  - if: "{{ wait.completed }}"
-    then:
-      - action: input_datetime.set_datetime
-        target:
-          entity_id: input_datetime.epaper_last_render
+  - choose:
+      - conditions:
+          - condition: time
+            after: "05:30:00"
+            before: "12:00:00"
+          # Render at most once a day - guards against reconnect storms re-triggering this.
+          - condition: template
+            value_template: >-
+              {{ state_attr('input_datetime.epaper_last_render', 'timestamp') is none
+                 or state_attr('input_datetime.epaper_last_render', 'timestamp') < today_at('00:00') | as_timestamp }}
+        sequence:
+          # Image generation must never block the reload + deep sleep below, so continue
+          # regardless of outcome - the script itself falls back to a placeholder image
+          # (see generate_new_image.sh) if the AI API fails.
+          - action: remote_command_line.generate_ai_image
+            data: {}
+            continue_on_error: true
+          - delay:
+              seconds: 2
+          # Explicitly triggers online_image.update() -> download -> render of the image
+          # that was just generated above.
+          - action: esphome.epaper_display_epaper_reload_image
+            data: {}
+            continue_on_error: true
+          - wait_for_trigger:
+              # IMPORTANT: do not add `attribute: event_type` + `to: render_complete` here.
+              # This event entity only ever fires ONE event type (render_complete), so that
+              # attribute value never actually *changes* between two triggers - and Home
+              # Assistant's state trigger only fires on a real change. Add the filter and
+              # this fires once (right after flashing) and then never again, silently
+              # breaking the automation from then on. Watching the bare state is enough:
+              # it is the event's timestamp, which is guaranteed to change on every render.
+              - trigger: state
+                entity_id: event.epaper_display_rendering
+            continue_on_timeout: true
+            timeout:
+              minutes: 4
+          - if: "{{ wait.completed }}"
+            then:
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.epaper_last_render
+                data:
+                  datetime: "{{ now() }}"
+          - action: esphome.epaper_display_sleep_until
+            data:
+              # Absolute Unix epoch (UTC). HA does the timezone/DST math, the device only
+              # computes target - now. Success -> sleep until 06:00 tomorrow. Timeout above
+              # -> sleep only 1h so the frame retries soon instead of getting stuck.
+              target: >-
+                {% set base = today_at('06:00') if today_at('06:00') > now() else today_at('06:00') + timedelta(days=1) %}
+                {{ (base if wait.completed else now() + timedelta(hours=1)) | as_timestamp | int }}
+    default:
+      # IMPORTANT: this branch is not optional. The frame wakes up (and this
+      # automation fires) far more often than once a day - Wi-Fi reconnects,
+      # manual boot-button presses, HA restarts. Every one of those wake-ups
+      # must get an explicit sleep_until, even the ones where nothing above
+      # runs because it's outside the window or already rendered today.
+      #
+      # If the window / once-a-day checks instead sit as automation-wide
+      # `conditions:` (so the whole automation, sleep_until included, only
+      # runs when they pass), the frame stops getting any sleep command at
+      # all for the rest of the day once it has rendered. It then falls back
+      # to ESPHome's own run_duration safety net and whatever sleep_duration
+      # is compiled into the firmware - typically far shorter than a day - so
+      # it keeps waking up roughly hourly around the clock instead of
+      # sleeping until the next window. Always re-arm sleep_until here.
+      - action: esphome.epaper_display_sleep_until
         data:
-          datetime: "{{ now() }}"
-  - action: esphome.epaper_display_sleep_until
-    data:
-      # Absolute Unix epoch (UTC). HA does the timezone/DST math, the device only
-      # computes target - now. Success -> sleep until 06:00 tomorrow. Timeout above
-      # -> sleep only 1h so the frame retries soon instead of getting stuck.
-      target: >-
-        {% set base = today_at('06:00') if today_at('06:00') > now() else today_at('06:00') + timedelta(days=1) %}
-        {{ (base if wait.completed else now() + timedelta(hours=1)) | as_timestamp | int }}
+          target: >-
+            {% set base = today_at('06:00') if today_at('06:00') > now() else today_at('06:00') + timedelta(days=1) %}
+            {{ base | as_timestamp | int }}
 mode: single
 ```
 
