@@ -188,14 +188,16 @@ actions:
               {{ state_attr('input_datetime.epaper_last_render', 'timestamp') is none
                  or state_attr('input_datetime.epaper_last_render', 'timestamp') < today_at('00:00') | as_timestamp }}
         sequence:
-          # Image generation must never block the reload + deep sleep below, so continue
-          # regardless of outcome - the script itself falls back to a placeholder image
-          # (see generate_new_image.sh) if the AI API fails.
+          # remote_command_line runs the script synchronously and only returns once it
+          # exits (bounded by command_timeout below), so output.png is already fully
+          # written by the time the next step runs - no extra delay needed here.
+          # continue_on_error only guards against a script failure aborting the
+          # automation, not against a long runtime - the script's own fallback to a
+          # placeholder image (see generate_new_image.sh) is what keeps this fast on
+          # AI-API failures.
           - action: remote_command_line.generate_ai_image
             data: {}
             continue_on_error: true
-          - delay:
-              seconds: 2
           # Explicitly triggers online_image.update() -> download -> render of the image
           # that was just generated above.
           - action: esphome.epaper_display_epaper_reload_image
@@ -258,7 +260,7 @@ mode: single
 
 - Make sure to have the scripts set to executable via chmod
 - Adapt the parameters in the script as needed
-- Make the scripts usable as actions in HA automations via commandline, shell or remotecommandline addons. Note that HA command line commands must not take longer than 60s while the free tier of hugging face AI models might take longer to provide a result. You might want to use the remotecommandline addon (https://github.com/koying/ha-remote-command-line.git) instead, which allows to set a custom timeout. 
+- Make the scripts usable as actions in HA automations via commandline, shell or remotecommandline addons. Note that HA command line commands must not take longer than 60s while the free tier of hugging face AI models might take longer to provide a result. You might want to use the remotecommandline addon (https://github.com/koying/ha-remote-command-line.git) instead, which allows to set a custom timeout - it runs the script synchronously and blocks the calling automation until it exits, so the timeout you configure is a hard ceiling on how long that automation (and therefore your device's wake time) can stall. `generate_new_image.sh`'s own primary API call is capped at 60s (`curl --max-time`), with a 90s-capped Picsum fallback on failure, so a `command_timeout` around 180s (60s + 90s + a buffer for ffmpeg/backup) covers the worst case without leaving it open-ended.
 - Double check if your HA has ffmpeg installed. For this, you need to execute the command in the HA docker container, use `docker container exec homeassistant ls /usr/bin | less. Note that you need to disable protection mode in terminal to run this command. Also you might want to configure ffmpeg for homeassistant as well by adding a configuration entry in your configuration.yaml. See ffmpeg integration description.
 
 
