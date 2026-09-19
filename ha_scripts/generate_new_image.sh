@@ -331,6 +331,7 @@ echo "Fetching image from API..."
 # Enable debug mode to print commands before execution
 set -x
 curl \
+  --max-time 60 \
   --trace-ascii "$TRACE_FILENAME" --trace-time \
   -X POST \
   "$MODEL_URL" \
