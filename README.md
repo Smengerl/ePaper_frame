@@ -1,38 +1,31 @@
-# ePaper frame for ESP32
+# ePaper Picture Frame
 
 [![3D Printing](https://img.shields.io/badge/3D_printing-STL-green)](#)
 [![ESPhome](https://img.shields.io/badge/homeassistant-ESPhome-green)](#)
 [![License](https://img.shields.io/badge/license-CC%20BY--SA%204.0-blue)](http://creativecommons.org/licenses/by-sa/4.0/)
 
-A 3D printed picture frame that shows unique pictures every day, built with ESP32/ESPhome:
+<img src="./print/photos/example_usage.jpg" alt="ePaper picture frame showing an AI-generated picture"/>
+
+A 3D printed ePaper picture frame that shows a new picture every day, built with ESP32 and ESPHome. Let an AI generate a new image each morning, or show any picture from the web: the frame itself is universal, and it is fully integrated into Home Assistant.
+
+- A robust 3D printed structure fitting into a regular 13x18cm IKEA picture frame (e.g. RÖDALM)
+- Can be used in portrait and landscape mode
+- Home Assistant integration for flexible usage
+- Example code (e.g. AI image generator)
+- Power saving due to ESP32 deep sleep support
 
 ## Table of Contents
 - [Mechanics](#mechanics)
 - [Electronics](#electronics)
-- [Usage](#usage)
-- [Acknowledgements](#acknowledgements)
-- [Development](#development)
-- [License](#license)
-- [Authors](#authors)
-
-- A robust 3D printed structure fitting into a regular 13x18cm IKEA picture frame (e.g. RÖDALM)
-- can be used in portrait and landscape mode
-- home assistant integration for flexible usage
-- Example code (e.g. AI image generator)
-- Power saving due to ESP32 deep sleep support
-
-<img src="./print/photos/example_usage.jpg" alt="example_usage"/>
-
-# Index
-- [Mechanics](#Mechanics)
-- [Electronics](#Electronics)
 - [Usage: ESP home integration](#esp-home-integration)
 - [Usage: home assistant automation](#home-assistant-automation)
 - [Usage: AI generated image](#ai-image-generator-script)
 - [Usage: Lorem picsum random picture](#lorem-picsum-picture)
 - [Usage: Wallhaven picture of the day](#wallhaven-picture-of-the-day)
-- [Acknowledgements](#Acknowledgements)
-
+- [Acknowledgements](#acknowledgements)
+- [Development](#development)
+- [License](#license)
+- [Authors](#authors)
 
 ## Mechanics
 
