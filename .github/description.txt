@@ -1,1 +1,1 @@
-ePaper Frame for ESPhome / home assistant based on ESP32
+Turn an IKEA frame into a daily-changing ePaper art frame: AI images or any picture, controlled from Home Assistant. ESP32.
